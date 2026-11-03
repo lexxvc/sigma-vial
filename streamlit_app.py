@@ -42,7 +42,8 @@ def cerrar_etiqueta(etiqueta):
 
 def motor_sesion():
     if "motor" not in st.session_state:
-        red_compartida()
+        with st.spinner("Preparando la red del campus y arrancando SUMO…"):
+            red_compartida()
         m = Motor(etiqueta=f"s_{uuid.uuid4().hex[:8]}")
         m._iniciar()
         weakref.finalize(m, cerrar_etiqueta, m.etiqueta)   # libera SUMO cuando la sesión termina
@@ -59,9 +60,9 @@ cmd = m.cmds.put
 with st.sidebar:
     st.markdown("### 🚦 SIGMA-Vial")
     c1, c2 = st.columns(2)
-    if c1.button("⏸ Pausa" if m.corriendo else "▶ Iniciar", type="primary", use_container_width=True):
+    if c1.button("⏸ Pausa" if m.corriendo else "▶ Iniciar", type="primary", width="stretch"):
         cmd(("toggle",)); st.session_state.ultimo = time.time(); m._procesar_cmds(); st.rerun()
-    if c2.button("↺ Reiniciar", use_container_width=True):
+    if c2.button("↺ Reiniciar", width="stretch"):
         cmd(("reiniciar",))
     vel = st.select_slider("Velocidad", [0.5, 1, 2, 5, 10, 20], value=m.velocidad if m.velocidad in (0.5, 1, 2, 5, 10, 20) else 1,
                            format_func=lambda v: f"{v}×")
@@ -73,12 +74,12 @@ with st.sidebar:
 
     st.markdown("#### Plan semafórico")
     p1, p2 = st.columns(2)
-    if p1.button("Plan fijo", use_container_width=True, type="primary" if m.plan_nombre == "fijo" else "secondary"):
+    if p1.button("Plan fijo", width="stretch", type="primary" if m.plan_nombre == "fijo" else "secondary"):
         cmd(("plan", "fijo"))
-    if p2.button("Crew (guardado)", use_container_width=True,
+    if p2.button("Crew (guardado)", width="stretch",
                  type="primary" if m.plan_nombre == "crew_guardado" else "secondary"):
         cmd(("plan", "crew_guardado"))
-    if st.button("🤖 Replanificar con Crew en vivo", use_container_width=True,
+    if st.button("🤖 Replanificar con Crew en vivo", width="stretch",
                  disabled=m.crew["estado"] == "deliberando"):
         cmd(("crew",))
     pre = st.toggle("Preempción para ambulancias", value=m.preempcion)
@@ -91,13 +92,13 @@ with st.sidebar:
     for k, a in ACCESOS.items():
         st.caption(a["nombre"])
         b1, b2, b3 = st.columns(3)
-        if b1.button("+1", key=f"a1_{k}", use_container_width=True):
+        if b1.button("+1", key=f"a1_{k}", width="stretch"):
             cmd(("autos", k, 1))
-        if b2.button("+10", key=f"a10_{k}", use_container_width=True):
+        if b2.button("+10", key=f"a10_{k}", width="stretch"):
             cmd(("autos", k, 10))
-        if b3.button("🚑", key=f"amb_{k}", use_container_width=True):
+        if b3.button("🚑", key=f"amb_{k}", width="stretch"):
             cmd(("ambulancia", k, destino))
-    if st.button("🔔 Cambio de clase (+40 autos)", use_container_width=True):
+    if st.button("🔔 Cambio de clase (+40 autos)", width="stretch"):
         cmd(("rafaga", 40))
 
 
@@ -172,7 +173,7 @@ def vista():
     cols[5].metric("🚑 último cruce (s)", round(k["amb_ultimo_s"]) if k["amb_ultimo_s"] else "–")
     izq, der = st.columns([3, 2])
     with izq:
-        st.plotly_chart(figura_mapa(e), use_container_width=True, config={"displayModeBar": False}, key="mapa")
+        st.plotly_chart(figura_mapa(e), width="stretch", config={"displayModeBar": False}, key="mapa")
         st.caption("⬜ en movimiento · 🟧 detenido < 30 s · 🟥 detenido > 30 s · ⭐ ambulancia · 🔴 acceso")
     with der:
         verdes = " · ".join(f"**{i}** {'/'.join(map(str, v))} s" for i, v in e["plan"]["verdes"].items())
@@ -184,7 +185,7 @@ def vista():
             st.warning(c["mensaje"])
         elif c["estado"] == "listo":
             st.success(c["mensaje"])
-        st.plotly_chart(figura_hist(e["hist"]), use_container_width=True, config={"displayModeBar": False}, key="hist")
+        st.plotly_chart(figura_hist(e["hist"]), width="stretch", config={"displayModeBar": False}, key="hist")
         st.markdown("**Eventos**")
         st.code("\n".join(e["log"][:12]) or "—", language=None)
         if c.get("reporte"):
