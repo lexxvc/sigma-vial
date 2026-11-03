@@ -68,9 +68,9 @@ def _iniciar(net, rou, seed):
                  "--no-step-log", "--time-to-teleport", "120", "--waiting-time-memory", "10000"])
 
 
-def _logica_con_todo_rojo(tls_id, verdes):
+def _logica_con_todo_rojo(tls_id, verdes, conn=None):
     """Construye el programa del semáforo: verde → ámbar 3 s → todo-rojo 2 s."""
-    base = traci.trafficlight.getAllProgramLogics(tls_id)[0]
+    base = (conn or traci).trafficlight.getAllProgramLogics(tls_id)[0]
     fases_verde = [p for p in base.phases if "y" not in p.state]
     fases_ambar = [p for p in base.phases if "y" in p.state]
     nuevas = []
@@ -127,38 +127,40 @@ def simular(net, rou, plan=None, seed=42, fin=900, fallas=("I2",), snapshot_en=5
     return m, foto
 
 
-def _foto(tls_ids, verdes_fijos, t, fallas, vivos):
+def _foto(tls_ids, verdes_fijos, t, fallas, vivos, conn=None):
     """Estado observable por los sensores (PEAS-S). Los carriles con falla no reportan."""
+    T = conn or traci
     foto = {"hora_simulada": "09:00", "t_sim_s": t, "intersecciones": {}, "tramos_compartidos": {},
             "emergencia": None}
     for k, tls in tls_ids.items():
         carriles = {}
-        for i, ln in enumerate(dict.fromkeys(traci.trafficlight.getControlledLanes(tls))):
+        for i, ln in enumerate(dict.fromkeys(T.trafficlight.getControlledLanes(tls))):
             falla = k in fallas and i == 0
             carriles[ln] = None if falla else {
-                "vehiculos_detenidos": traci.lane.getLastStepHaltingNumber(ln),
-                "vehiculos_total": traci.lane.getLastStepVehicleNumber(ln),
-                "ocupacion_pct": round(traci.lane.getLastStepOccupancy(ln) * 100, 1),
-                "espera_acumulada_s": round(traci.lane.getWaitingTime(ln), 1),
-                "longitud_m": round(traci.lane.getLength(ln), 1)}
+                "vehiculos_detenidos": T.lane.getLastStepHaltingNumber(ln),
+                "vehiculos_total": T.lane.getLastStepVehicleNumber(ln),
+                "ocupacion_pct": round(T.lane.getLastStepOccupancy(ln) * 100, 1),
+                "espera_acumulada_s": round(T.lane.getWaitingTime(ln), 1),
+                "longitud_m": round(T.lane.getLength(ln), 1)}
         foto["intersecciones"][k] = {"nombre": INTERSECCIONES[k]["nombre"], "tls": tls,
-                                     "fase_actual": traci.trafficlight.getPhase(tls),
+                                     "fase_actual": T.trafficlight.getPhase(tls),
                                      "verdes_actuales_s": verdes_fijos[k],
                                      "num_fases_verde": len(verdes_fijos[k]),
-                                     "fases_verde": _fases_servidas(tls),
+                                     "fases_verde": _fases_servidas(tls, T),
                                      "peatones_esperando": {"I1": 14, "I2": 22, "I3": 6, "I4": 9}[k],
                                      "carriles": carriles}
     for nom, e in TRAMOS_COMPARTIDOS.items():
-        foto["tramos_compartidos"][nom] = {"edge": e, "ocupacion_pct": round(traci.edge.getLastStepOccupancy(e) * 100, 1),
-                                           "vehiculos": traci.edge.getLastStepVehicleNumber(e)}
+        foto["tramos_compartidos"][nom] = {"edge": e, "ocupacion_pct": round(T.edge.getLastStepOccupancy(e) * 100, 1),
+                                           "vehiculos": T.edge.getLastStepVehicleNumber(e)}
     foto["emergencia"] = {"tipo": "ambulancia", "acceso": "I4", "eta_s": 60, "destino": "I3"}
     return foto
 
 
-def _fases_servidas(tls):
+def _fases_servidas(tls, conn=None):
     """Qué carriles atiende cada fase verde (índice de fase verde → carriles de entrada)."""
-    logic = traci.trafficlight.getAllProgramLogics(tls)[0]
-    links = traci.trafficlight.getControlledLinks(tls)
+    T = conn or traci
+    logic = T.trafficlight.getAllProgramLogics(tls)[0]
+    links = T.trafficlight.getControlledLinks(tls)
     salida, i = [], 0
     for ph in logic.phases:
         if "y" in ph.state or set(ph.state) == {"r"}:

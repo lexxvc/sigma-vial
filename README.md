@@ -32,10 +32,54 @@ contra el plan fijo.
 
 Detalle: [`results/reporte_crew.md`](results/reporte_crew.md) · [`results/plan_final.json`](results/plan_final.json)
 
+## ☁️ Correr en la nube (sin instalar nada)
+
+La app está lista para **Streamlit Community Cloud** (gratis):
+
+1. Entra a **https://share.streamlit.io** e inicia sesión con tu cuenta de GitHub.
+2. **Create app** → *Deploy a public app from GitHub*.
+3. Repository: `lexxvc/sigma-vial` · Branch: `main` · Main file path: `streamlit_app.py`.
+4. En **Advanced settings** elige Python **3.12** y, si quieres usar el Crew en vivo, pega en *Secrets*:
+   ```toml
+   GEMINI_API_KEY = "tu_api_key"
+   ```
+5. **Deploy**. La primera vez tarda unos minutos en instalar; después tendrás un link `https://….streamlit.app` que abre desde cualquier navegador o celular.
+
+![App en Streamlit](results/figuras/app_streamlit.png)
+
+Cada persona que abre el link tiene su propia simulación independiente.
+
+## Interfaz en tiempo real (local)
+
+![App en vivo](results/figuras/app_en_vivo.png)
+
+App web local para ver el circuito funcionando y meter tráfico a mano:
+
+- **Accesos:** botones `+1`, `+10` y `🚑` en los 5 accesos (sur, norte y 3 estacionamientos), o clic sobre el acceso en el mapa (Shift + clic = ambulancia).
+- **Cambio de clase:** ráfaga de 40 autos repartidos entre los accesos.
+- **Plan semafórico en caliente:** plan fijo ↔ plan del Crew guardado ↔ **replanificar con el Crew en vivo** (toma la foto actual de SUMO, corre los 4 agentes y aplica el plan validado).
+- **Preempción de emergencia:** verde forzado (con ámbar previo) cuando una ambulancia se acerca a menos de 60 m de un semáforo.
+- **Métricas en vivo:** vehículos en red, detenidos, espera promedio, salidas/min y tiempo de cruce de ambulancias.
+
+```bash
+pip install -r requirements.txt
+python app/servidor.py            # abre http://localhost:5000
+python app/servidor.py --sumo-gui # además abre la ventana nativa de SUMO
+```
+
+En Windows basta con doble clic en `iniciar_app.bat`. Para el Crew en vivo define antes `GEMINI_API_KEY`.
+
 ## Estructura
 
 ```
 sigma-vial/
+├── streamlit_app.py    # app para Streamlit Cloud
+├── packages.txt        # librerías de sistema que necesita SUMO en la nube
+├── .streamlit/config.toml
+├── app/
+│   ├── motor.py        # simulación en tiempo real (hilo dueño de TraCI)
+│   ├── servidor.py     # API Flask + lanzador
+│   └── static/index.html  # interfaz (mapa en canvas + panel de control)
 ├── notebooks/SIGMA_Vial_CrewAI.ipynb   # flujo completo con resultados
 ├── src/
 │   ├── sigma_sim.py    # red, demanda, simulación y métricas (SUMO + TraCI)
@@ -43,6 +87,7 @@ sigma-vial/
 │   └── sigma_anim.py   # animación plan fijo vs Crew
 ├── data/               # mapa.osm del campus
 ├── results/            # figuras, reporte y plan final
+├── iniciar_app.bat     # lanzador de la app en Windows
 ├── requirements.txt
 └── .env.example
 ```

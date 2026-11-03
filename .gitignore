@@ -13,3 +13,6 @@ sigma_crew_log.txt
 sigma_resultado.json
 /simulacion.gif
 /comparacion.png
+
+# Interfaz en vivo
+build/

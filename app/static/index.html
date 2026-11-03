@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SIGMA-Vial en vivo</title>
+<style>
+:root{
+  --bg:#0f1115;--panel:#171a21;--panel2:#1e222b;--line:#2a2f3a;--txt:#e6e8ec;--mut:#8b93a3;
+  --verde:#2ecc71;--ambar:#f1c40f;--rojo:#e74c3c;--azul:#3498db;--acento:#c0392b;--calle:#3a3f4b;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+header h1{font-size:16px;margin:0;font-weight:650;letter-spacing:.2px}
+header h1 b{color:var(--acento)}
+.reloj{font:600 15px ui-monospace,Consolas,monospace;margin-left:auto;color:var(--mut)}
+.reloj span{color:var(--txt)}
+.punto{width:9px;height:9px;border-radius:50%;background:var(--mut);display:inline-block;margin-right:6px}
+.punto.on{background:var(--verde);box-shadow:0 0 8px var(--verde)}
+main{display:grid;grid-template-columns:minmax(0,1fr) 370px;height:calc(100% - 49px)}
+#zonaMapa{position:relative;display:grid;grid-template-rows:minmax(0,1fr) 150px;min-height:0}
+#mapa{width:100%;height:100%;display:block;cursor:crosshair}
+.leyenda{position:absolute;left:12px;top:10px;background:#0f1115cc;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--mut)}
+.leyenda div{display:flex;align-items:center;gap:6px;margin:2px 0}
+.leyenda i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.ayuda{position:absolute;right:12px;top:10px;font-size:12px;color:var(--mut);background:#0f1115cc;padding:6px 10px;border-radius:8px;border:1px solid var(--line);max-width:260px}
+#grafica{width:100%;height:150px;display:block;border-top:1px solid var(--line);background:var(--panel)}
+aside{background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;padding:12px 14px 30px}
+section{margin-bottom:16px}
+h2{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--mut);margin:0 0 8px;font-weight:600}
+.fila{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button,select{font:inherit;color:var(--txt);background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:6px 10px;cursor:pointer}
+button:hover{border-color:#4a5262}
+button.prim{background:var(--acento);border-color:var(--acento);font-weight:600}
+button.sel{background:#2b3240;border-color:var(--azul);color:#fff}
+button:disabled{opacity:.5;cursor:wait}
+input[type=range]{flex:1;accent-color:var(--acento)}
+.val{font:600 13px ui-monospace,Consolas,monospace;min-width:64px;text-align:right}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.verdes{margin-top:8px;font:12px ui-monospace,Consolas,monospace;color:var(--mut);display:grid;grid-template-columns:auto 1fr;gap:2px 10px}
+.verdes b{color:var(--txt);font-weight:600}
+.verdes .pre{color:var(--azul)}
+.crewmsg{margin-top:8px;font-size:12px;color:var(--mut);min-height:16px}
+.crewmsg.err{color:#ff8a7a}.crewmsg.ok{color:var(--verde)}
+.acc{display:grid;grid-template-columns:1fr auto auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.acc:last-child{border-bottom:0}
+.acc span{font-size:13px}
+.acc button{padding:4px 8px;font-size:13px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.kpi small{display:block;color:var(--mut);font-size:11px}
+.kpi strong{font:650 20px ui-monospace,Consolas,monospace}
+.kpi.amb strong{color:var(--azul)}
+#log{font:12px ui-monospace,Consolas,monospace;color:var(--mut);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px;max-height:180px;overflow-y:auto;white-space:pre-wrap}
+label.chk{display:flex;gap:8px;align-items:center;cursor:pointer;font-size:13px}
+dialog{background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:10px;max-width:640px;width:92vw}
+dialog pre{white-space:pre-wrap;font:13px/1.5 system-ui,sans-serif;max-height:65vh;overflow:auto}
+@media (max-width:900px){
+  header h1{font-size:14px} .ayuda{display:none}
+  main{grid-template-columns:1fr;height:auto}
+  #zonaMapa{height:75vh}
+  aside{border-left:0;border-top:1px solid var(--line)}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1><b>SIGMA</b>-Vial · simulación en vivo</h1>
+  <div class="reloj"><i class="punto" id="punto"></i>t sim <span id="reloj">00:00</span></div>
+</header>
+<main>
+  <div id="zonaMapa">
+    <canvas id="mapa"></canvas>
+    <div class="leyenda">
+      <div><i style="background:#ecf0f1"></i>en movimiento</div>
+      <div><i style="background:#f39c12"></i>detenido &lt; 30 s</div>
+      <div><i style="background:var(--rojo)"></i>detenido &gt; 30 s</div>
+      <div><i style="background:var(--azul)"></i>ambulancia</div>
+      <div><i style="background:#c0392b;border-radius:50%"></i>acceso (clic)</div>
+    </div>
+    <div class="ayuda">Clic en un acceso ● = +5 autos · Shift + clic = ambulancia</div>
+    <canvas id="grafica"></canvas>
+  </div>
+  <aside>
+    <section>
+      <h2>Simulación</h2>
+      <div class="fila">
+        <button class="prim" id="btnPlay">▶ Iniciar</button>
+        <button id="btnReset">↺ Reiniciar</button>
+        <select id="vel" title="velocidad">
+          <option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option>
+          <option value="5">5×</option><option value="10">10×</option><option value="20">20×</option>
+        </select>
+      </div>
+      <div class="fila" style="margin-top:10px">
+        <span style="font-size:13px">Demanda de fondo</span>
+        <input type="range" id="dem" min="0" max="90" step="5" value="20">
+        <span class="val" id="demVal">20 v/min</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Plan semafórico</h2>
+      <div class="seg">
+        <button data-plan="fijo" class="sel">Plan fijo</button>
+        <button data-plan="crew_guardado">Crew (guardado)</button>
+      </div>
+      <div class="fila" style="margin-top:6px">
+        <button id="btnCrew" style="flex:1">🤖 Replanificar con Crew en vivo</button>
+        <button id="btnRep" title="ver reporte del Crew" disabled>📄</button>
+      </div>
+      <div class="crewmsg" id="crewMsg"></div>
+      <div class="verdes" id="verdes"></div>
+      <label class="chk" style="margin-top:10px"><input type="checkbox" id="pre" checked> Preempción para ambulancias (verde forzado)</label>
+    </section>
+
+    <section>
+      <h2>Accesos</h2>
+      <div id="accesos"></div>
+      <div class="fila" style="margin-top:8px">
+        <span style="font-size:13px">Destino 🚑</span>
+        <select id="destino" style="flex:1"><option value="">aleatorio</option></select>
+      </div>
+      <button style="width:100%;margin-top:8px" id="btnRafaga">🔔 Cambio de clase (+40 autos repartidos)</button>
+    </section>
+
+    <section>
+      <h2>Desempeño</h2>
+      <div class="kpis">
+        <div class="kpi"><small>Vehículos en red</small><strong id="kRed">0</strong></div>
+        <div class="kpi"><small>Detenidos</small><strong id="kDet">0</strong></div>
+        <div class="kpi"><small>Espera prom. (s)</small><strong id="kEsp">–</strong></div>
+        <div class="kpi"><small>Salidas / min</small><strong id="kSal">–</strong></div>
+        <div class="kpi amb"><small>🚑 último cruce (s)</small><strong id="kAmb">–</strong></div>
+        <div class="kpi amb"><small>🚑 promedio (s)</small><strong id="kAmbP">–</strong></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Eventos</h2>
+      <div id="log"></div>
+    </section>
+  </aside>
+</main>
+<dialog id="dlg"><h3 style="margin-top:0">Reporte del Crew</h3><pre id="rep"></pre><form method="dialog"><button>Cerrar</button></form></dialog>
+
+<script>
+const $ = id => document.getElementById(id);
+const api = (accion, extra = {}) => fetch("api/cmd", {method: "POST", headers: {"Content-Type": "application/json"},
+                                     body: JSON.stringify({accion, ...extra})});
+let RED = null, EST = null, accPx = {};
+const cv = $("mapa"), cx = cv.getContext("2d"), gv = $("grafica"), gx = gv.getContext("2d");
+
+function ajustar(c){ const r = c.getBoundingClientRect(), d = devicePixelRatio || 1;
+  c.width = r.width * d; c.height = r.height * d; c.getContext("2d").setTransform(d, 0, 0, d, 0, 0); return r; }
+
+function transf(){
+  const r = cv.getBoundingClientRect(), [x0, y0, x1, y1] = RED.bbox, pad = 34;
+  const s = Math.min((r.width - 2*pad) / (x1 - x0), (r.height - 2*pad) / (y1 - y0));
+  const ox = (r.width - s*(x1 - x0)) / 2, oy = (r.height - s*(y1 - y0)) / 2;
+  return {s, X: x => ox + (x - x0)*s, Y: y => r.height - oy - (y - y0)*s};
+}
+
+function dibujar(){
+  if (!RED) return;
+  const r = ajustar(cv), T = transf();
+  cx.fillStyle = "#0f1115"; cx.fillRect(0, 0, r.width, r.height);
+  cx.lineCap = "round"; cx.lineJoin = "round";
+  cx.strokeStyle = "#3a3f4b"; cx.lineWidth = Math.max(4, 3.4*T.s);
+  for (const c of RED.calles){ cx.beginPath(); c.forEach(([x, y], i) => i ? cx.lineTo(T.X(x), T.Y(y)) : cx.moveTo(T.X(x), T.Y(y))); cx.stroke(); }
+  cx.fillStyle = "#3a3f4b";
+  for (const n of RED.nodos){ cx.beginPath(); n.forEach(([x, y], i) => i ? cx.lineTo(T.X(x), T.Y(y)) : cx.moveTo(T.X(x), T.Y(y))); cx.closePath(); cx.fill(); }
+  // accesos
+  accPx = {};
+  for (const [k, a] of Object.entries(RED.accesos)){
+    const X = T.X(a.x), Y = T.Y(a.y); accPx[k] = [X, Y];
+    cx.fillStyle = "#c0392b"; cx.beginPath(); cx.arc(X, Y, 7, 0, 7); cx.fill();
+    cx.strokeStyle = "#fff6"; cx.lineWidth = 1.5; cx.stroke();
+  }
+  // intersecciones
+  const pre = new Set(EST ? EST.preempcion_activa : []);
+  cx.font = "bold 12px system-ui";
+  for (const [k, n] of Object.entries(RED.intersecciones)){
+    cx.fillStyle = pre.has(k) ? "#3498db" : "#7fb3e6"; cx.fillText(k + (pre.has(k) ? " 🚑" : ""), T.X(n.x) + 10, T.Y(n.y) + 16);
+  }
+  if (!EST) return;
+  // semáforos
+  const L = Math.max(3, 2.2*T.s);
+  for (const [x, y, c] of EST.luces){ cx.fillStyle = c; cx.fillRect(T.X(x) - L/2, T.Y(y) - L/2, L, L); }
+  // vehículos
+  const col = ["#ecf0f1", "#f39c12", "#e74c3c", "#3498db"];
+  const lw = Math.max(3, 1.8*T.s), ll = Math.max(6, 4.5*T.s);
+  const orden = [...EST.vehiculos].sort((a, b) => (a[3] === 3) - (b[3] === 3));
+  for (const [x, y, ang, tipo] of orden){
+    cx.save(); cx.translate(T.X(x), T.Y(y)); cx.rotate(ang*Math.PI/180);
+    if (tipo === 3){ cx.shadowColor = "#3498db"; cx.shadowBlur = 12; cx.fillStyle = (Date.now() / 250 | 0) % 2 ? "#3498db" : "#e8f4ff";
+      cx.fillRect(-lw, -ll*0.8, lw*2, ll*1.6); cx.shadowBlur = 0;
+      cx.strokeStyle = "#fff"; cx.lineWidth = 1.5; cx.strokeRect(-lw, -ll*0.8, lw*2, ll*1.6); }
+    else { cx.fillStyle = col[tipo]; cx.fillRect(-lw/2, -ll/2, lw, ll); }
+    cx.restore();
+  }
+}
+
+function grafica(){
+  const r = ajustar(gv); gx.fillStyle = "#171a21"; gx.fillRect(0, 0, r.width, r.height);
+  const h = (EST && EST.hist) || [];
+  gx.fillStyle = "#8b93a3"; gx.font = "11px system-ui";
+  gx.fillText("Vehículos en red", 12, 16); gx.fillStyle = "#e74c3c"; gx.fillText("■ detenidos", 112, 16);
+  if (h.length < 2) return;
+  const pl = 34, pr = 12, pt = 24, pb = 20, W = r.width - pl - pr, H = r.height - pt - pb;
+  const mx = Math.max(10, ...h.map(p => p[1])) * 1.1, t0 = h[0][0], t1 = h[h.length - 1][0];
+  const X = t => pl + (t - t0) / Math.max(1, t1 - t0) * W, Y = v => pt + H - v / mx * H;
+  gx.strokeStyle = "#2a2f3a"; gx.lineWidth = 1; gx.fillStyle = "#8b93a3";
+  for (let i = 0; i <= 3; i++){ const v = Math.round(mx / 3 * i); gx.beginPath(); gx.moveTo(pl, Y(v)); gx.lineTo(pl + W, Y(v)); gx.stroke(); gx.fillText(v, 6, Y(v) + 4); }
+  const linea = (idx, c) => { gx.strokeStyle = c; gx.lineWidth = 2; gx.beginPath(); h.forEach((p, i) => i ? gx.lineTo(X(p[0]), Y(p[idx])) : gx.moveTo(X(p[0]), Y(p[idx]))); gx.stroke(); };
+  linea(1, "#ecf0f1"); linea(2, "#e74c3c");
+  const f = t => `${String(Math.floor(t/60)).padStart(2, "0")}:${String(Math.floor(t%60)).padStart(2, "0")}`;
+  gx.fillText(f(t0), pl, r.height - 5); gx.textAlign = "right"; gx.fillText(f(t1), pl + W, r.height - 5); gx.textAlign = "left";
+}
+
+function panel(){
+  const e = EST, m = e.metricas;
+  $("reloj").textContent = `${String(Math.floor(e.t/60)).padStart(2, "0")}:${String(Math.floor(e.t%60)).padStart(2, "0")}`;
+  $("punto").classList.toggle("on", e.corriendo);
+  $("btnPlay").textContent = e.corriendo ? "⏸ Pausa" : "▶ Iniciar";
+  $("kRed").textContent = m.en_red; $("kDet").textContent = m.detenidos;
+  $("kEsp").textContent = m.completados ? m.espera_prom_s : "–"; $("kSal").textContent = m.salidas_min || "–";
+  $("kAmb").textContent = m.amb_ultimo_s != null ? Math.round(m.amb_ultimo_s) : "–";
+  $("kAmbP").textContent = m.amb_prom_s ?? "–";
+  document.querySelectorAll("[data-plan]").forEach(b => b.classList.toggle("sel", b.dataset.plan === e.plan.nombre));
+  $("btnCrew").classList.toggle("sel", e.plan.nombre === "crew_vivo");
+  const pre = new Set(e.preempcion_activa);
+  $("verdes").innerHTML = Object.entries(e.plan.verdes).map(([k, v]) =>
+     `<b class="${pre.has(k) ? "pre" : ""}">${k}</b><span>verdes ${v.join(" / ")} s${pre.has(k) ? " · preempción 🚑" : ""}</span>`).join("");
+  const c = e.crew, msg = $("crewMsg");
+  msg.textContent = c.estado === "deliberando" ? "⏳ " + c.mensaje : c.mensaje || "";
+  msg.className = "crewmsg " + (c.estado === "error" ? "err" : c.estado === "listo" ? "ok" : "");
+  $("btnCrew").disabled = c.estado === "deliberando";
+  $("btnRep").disabled = !c.reporte; $("rep").textContent = c.reporte || "";
+  $("log").textContent = e.log.join("\n");
+}
+
+async function sondear(){
+  try { const r = await fetch("api/estado"); EST = await r.json(); if (EST.t !== undefined){ panel(); } } catch (_) {}
+  setTimeout(sondear, 100);
+}
+function animar(){ dibujar(); grafica(); requestAnimationFrame(animar); }
+
+async function init(){
+  RED = await (await fetch("api/red")).json();
+  const cont = $("accesos");
+  for (const [k, a] of Object.entries(RED.accesos)){
+    const d = document.createElement("div"); d.className = "acc";
+    d.innerHTML = `<span>${a.nombre}</span><button data-n="1">+1</button><button data-n="10">+10</button><button data-amb>🚑</button>`;
+    d.querySelectorAll("[data-n]").forEach(b => b.onclick = () => api("autos", {acceso: k, n: +b.dataset.n}));
+    d.querySelector("[data-amb]").onclick = () => api("ambulancia", {acceso: k, destino: $("destino").value});
+    cont.appendChild(d);
+  }
+  for (const [k, n] of Object.entries(RED.salidas)) $("destino").add(new Option(n, k));
+  sondear(); animar();
+}
+
+$("btnPlay").onclick = () => api("toggle");
+$("btnReset").onclick = () => api("reiniciar");
+$("vel").onchange = e => api("velocidad", {valor: +e.target.value});
+$("dem").oninput = e => { $("demVal").textContent = e.target.value + " v/min"; };
+$("dem").onchange = e => api("demanda", {valor: +e.target.value});
+$("pre").onchange = e => api("preempcion", {valor: e.target.checked});
+document.querySelectorAll("[data-plan]").forEach(b => b.onclick = () => api("plan", {nombre: b.dataset.plan}));
+$("btnCrew").onclick = () => api("crew");
+$("btnRep").onclick = () => $("dlg").showModal();
+$("btnRafaga").onclick = () => api("rafaga", {n: 40});
+cv.addEventListener("click", ev => {
+  const r = cv.getBoundingClientRect(), x = ev.clientX - r.left, y = ev.clientY - r.top;
+  for (const [k, [X, Y]] of Object.entries(accPx)){
+    if (Math.hypot(x - X, y - Y) < 16){
+      ev.shiftKey ? api("ambulancia", {acceso: k, destino: $("destino").value}) : api("autos", {acceso: k, n: 5});
+      return;
+    }
+  }
+});
+init();
+</script>
+</body>
+</html>

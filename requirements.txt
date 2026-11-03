@@ -1,9 +1,12 @@
-crewai
+streamlit>=1.37
+plotly
 eclipse-sumo
 traci
 sumolib
+crewai
 pydantic
 matplotlib
 pandas
 pillow
 nest_asyncio
+flask
