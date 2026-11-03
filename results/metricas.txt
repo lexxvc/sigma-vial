@@ -1,0 +1,8 @@
+                        Plan fijo  SIGMA-Vial (Crew)  Mejora %
+vehiculos                   301.0              301.0       0.0
+espera_promedio_s           229.9               64.9      71.8
+espera_p95_s                694.0              173.0      75.1
+espera_max_continua_s       150.0              120.0      20.0
+segundos_con_spillback        0.0                0.0       NaN
+teleports_bloqueo            48.0                4.0      91.7
+tiempo_ambulancia_s         750.0              149.0      80.1

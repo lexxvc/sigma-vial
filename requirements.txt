@@ -1,0 +1,9 @@
+crewai
+eclipse-sumo
+traci
+sumolib
+pydantic
+matplotlib
+pandas
+pillow
+nest_asyncio
