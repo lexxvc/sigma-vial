@@ -11,6 +11,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from motor import Motor  # noqa: E402
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
+import logging
+logging.getLogger("werkzeug").setLevel(logging.ERROR)   # sin spam de peticiones en la consola/Colab
 app = Flask(__name__, static_folder=os.path.join(AQUI, "static"))
 motor: Motor = None
 _geo = None
@@ -38,7 +40,8 @@ def cmd():
     accion = d.get("accion")
     args = {"autos": (d.get("acceso"), d.get("n", 1)), "ambulancia": (d.get("acceso"), d.get("destino")),
             "velocidad": (d.get("valor"),), "demanda": (d.get("valor"),), "preempcion": (d.get("valor"),),
-            "plan": (d.get("nombre"),), "rafaga": (d.get("n", 30),)}.get(accion, ())
+            "plan": (d.get("nombre"),), "rafaga": (d.get("n", 30),),
+            "crew": (d.get("api_key"),)}.get(accion, ())
     motor.cmds.put((accion, *args))
     return jsonify(ok=True)
 

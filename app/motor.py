@@ -224,12 +224,13 @@ class Motor:
                 self.T.trafficlight.setRedYellowGreenState(tls, p["obj"]); p["ambar"] = False
 
     # ---------------- Crew en vivo ----------------
-    def _replanificar_crew(self):
+    def _replanificar_crew(self, api_key=None):
         if self.crew["estado"] == "deliberando":
             return
-        if not os.environ.get("GEMINI_API_KEY"):
-            self.crew.update(estado="error", mensaje="Falta GEMINI_API_KEY; usa el plan del Crew guardado.")
-            self._evento("Crew: falta GEMINI_API_KEY"); return
+        api_key = (api_key or "").strip() or os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            self.crew.update(estado="error", mensaje="Escribe tu API key de Gemini para usar el Crew en vivo.")
+            self._evento("Crew: falta la API key"); return
         vivos = self.T.vehicle.getIDList()
         foto = sim._foto(self.tls, self.verdes_fijos, int(self.T.simulation.getTime()), (), vivos, conn=self.T)
         foto["emergencia"] = None
@@ -238,9 +239,9 @@ class Motor:
             foto["emergencia"] = {"tipo": "ambulancia", "id": amb[0], "en_red": True}
         self.crew.update(estado="deliberando", mensaje="4 agentes analizando el estado actual…")
         self._evento("Crew: deliberando con la foto actual")
-        threading.Thread(target=self._hilo_crew, args=(foto,), daemon=True).start()
+        threading.Thread(target=self._hilo_crew, args=(foto, api_key), daemon=True).start()
 
-    def _hilo_crew(self, foto):
+    def _hilo_crew(self, foto, api_key):
         try:
             import nest_asyncio; nest_asyncio.apply()
         except Exception:
@@ -249,7 +250,8 @@ class Motor:
             from crewai import LLM
             import sigma_crew as sc
             sc.set_foto(foto)
-            llm = LLM(model=os.environ.get("SIGMA_MODELO", "gemini/gemini-2.5-flash"), temperature=0.2)
+            llm = LLM(model=os.environ.get("SIGMA_MODELO", "gemini/gemini-2.5-flash"), temperature=0.2,
+                      api_key=api_key)          # la clave del usuario solo vive en esta llamada
             res = sc.crear_crew(llm, verbose=False, log=os.path.join(self.build, "sigma_crew_log.txt")).kickoff(
                 inputs={"hora": time.strftime("%H:%M")})
             pf = res.pydantic
@@ -259,7 +261,10 @@ class Motor:
                              reporte=pf.reporte_markdown, plan=val["plan_corregido"])
             self.cmds.put(("plan", "crew_vivo"))
         except Exception as e:
-            self.crew.update(estado="error", mensaje=f"Error del Crew: {e}")
+            msg = str(e).replace(api_key, "***") if api_key else str(e)
+            if any(w in msg.lower() for w in ("api key", "api_key", "permission", "401", "403", "invalid")):
+                msg = "La API key no es válida o no tiene permisos. Revísala y vuelve a intentar."
+            self.crew.update(estado="error", mensaje=f"Error del Crew: {msg}")
 
     # ---------------- bucle ----------------
     def _procesar_cmds(self):
@@ -290,7 +295,7 @@ class Motor:
             elif accion == "plan":
                 self._aplicar_plan(c[1])
             elif accion == "crew":
-                self._replanificar_crew()
+                self._replanificar_crew(c[1] if len(c) > 1 else None)
 
     def _paso(self):
         self._demanda_fondo()

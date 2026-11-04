@@ -3,7 +3,7 @@ plotly
 eclipse-sumo
 traci
 sumolib
-crewai
+crewai[google-genai]
 pydantic
 matplotlib
 pandas

@@ -1,3 +1,13 @@
+---
+title: SIGMA-Vial
+emoji: 🚦
+colorFrom: red
+colorTo: gray
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # SIGMA-Vial · Control semafórico multiagente con CrewAI + SUMO
 
 Sistema que optimiza los tiempos de verde de 4 intersecciones del circuito interno de un campus.
@@ -32,7 +42,21 @@ contra el plan fijo.
 
 Detalle: [`results/reporte_crew.md`](results/reporte_crew.md) · [`results/plan_final.json`](results/plan_final.json)
 
-## ☁️ Correr en la nube (sin instalar nada)
+## ☁️ Correr en la nube gratis — Google Colab (recomendado)
+
+[![Abrir en Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/lexxvc/sigma-vial/blob/main/notebooks/app_en_vivo_colab.ipynb)
+
+1. Clic en el botón **Open in Colab**.
+2. **Entorno de ejecución → Ejecutar todo**.
+3. Al terminar, clic en **👉 Abrir SIGMA-Vial en vivo**.
+
+Opcional: agrega `GEMINI_API_KEY` en 🔑 *Secretos* de Colab para el Crew en vivo.
+
+## ☁️ Otra opción — Docker (Hugging Face Spaces u otra nube con contenedores)
+
+El repo incluye `Dockerfile`; la app escucha en el puerto `7860`.
+
+## ☁️ Alternativa — Streamlit Community Cloud
 
 La app está lista para **Streamlit Community Cloud** (gratis):
 
@@ -67,7 +91,7 @@ python app/servidor.py            # abre http://localhost:5000
 python app/servidor.py --sumo-gui # además abre la ventana nativa de SUMO
 ```
 
-En Windows basta con doble clic en `iniciar_app.bat`. Para el Crew en vivo define antes `GEMINI_API_KEY`.
+En Windows basta con doble clic en `iniciar_app.bat`. Para el Crew en vivo, cada usuario escribe su propia API key de Gemini en la app (no se guarda en el servidor).
 
 ## Estructura
 

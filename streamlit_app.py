@@ -79,9 +79,11 @@ with st.sidebar:
     if p2.button("Crew (guardado)", width="stretch",
                  type="primary" if m.plan_nombre == "crew_guardado" else "secondary"):
         cmd(("plan", "crew_guardado"))
+    clave = st.text_input("Tu API key de Gemini", type="password", key="api_key",
+                          help="Solo se usa para tu consulta al Crew; no se guarda.")
     if st.button("🤖 Replanificar con Crew en vivo", width="stretch",
                  disabled=m.crew["estado"] == "deliberando"):
-        cmd(("crew",))
+        cmd(("crew", clave))
     pre = st.toggle("Preempción para ambulancias", value=m.preempcion)
     if pre != m.preempcion:
         cmd(("preempcion", pre))
