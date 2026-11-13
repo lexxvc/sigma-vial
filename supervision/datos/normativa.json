@@ -1,0 +1,27 @@
+{
+  "fases_por_ciclo": 3,
+  "ambar_s": 3,
+  "todo_rojo_s": 2,
+  "verde_veh_min_s": 8,
+  "verde_veh_max_s": 60,
+  "ciclo_max_s": 120,
+  "espera_max_carril_s": 60,
+  "espera_max_cruce_peatonal_s": 60,
+  "velocidad_cruce_peatonal_m_s": 1.0,
+  "peso_max": 5.0,
+  "umbral_spillback_min": 0.3,
+  "umbral_spillback_max": 0.95,
+  "periodo_decision_max_s": 10,
+  "anchos_cruce_m": {
+    "I1": 12.0,
+    "I2": 9.5,
+    "I3": 14.0,
+    "I4": 10.5
+  },
+  "prioridad_movilidad": [
+    "peaton",
+    "ciclista",
+    "transporte_publico",
+    "vehiculo_particular"
+  ]
+}

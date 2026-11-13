@@ -109,16 +109,7 @@ dialog pre{white-space:pre-wrap;font:13px/1.5 system-ui,sans-serif;max-height:65
       <h2>Plan semafórico</h2>
       <div class="seg">
         <button data-plan="fijo" class="sel">Plan fijo</button>
-        <button data-plan="crew_guardado">Crew (guardado)</button>
-      </div>
-      <div class="llave">
-        <input type="password" id="apiKey" placeholder="Tu API key de Gemini (para el Crew en vivo)" autocomplete="off">
-        <label class="chk"><input type="checkbox" id="recordar"> Recordar en este navegador</label>
-        <small>Se usa solo para esta consulta; no se guarda en el servidor. <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Obtener una gratis</a></small>
-      </div>
-      <div class="fila" style="margin-top:6px">
-        <button id="btnCrew" style="flex:1">🤖 Replanificar con Crew en vivo</button>
-        <button id="btnRep" title="ver reporte del Crew" disabled>📄</button>
+        <button data-plan="supervision">Supervisión (liberada)</button>
       </div>
       <div class="crewmsg" id="crewMsg"></div>
       <div class="verdes" id="verdes"></div>
@@ -239,18 +230,10 @@ function panel(){
   $("kAmb").textContent = m.amb_ultimo_s != null ? Math.round(m.amb_ultimo_s) : "–";
   $("kAmbP").textContent = m.amb_prom_s ?? "–";
   document.querySelectorAll("[data-plan]").forEach(b => b.classList.toggle("sel", b.dataset.plan === e.plan.nombre));
-  $("btnCrew").classList.toggle("sel", e.plan.nombre === "crew_vivo");
   const pre = new Set(e.preempcion_activa);
   $("verdes").innerHTML = Object.entries(e.plan.verdes).map(([k, v]) =>
      `<b class="${pre.has(k) ? "pre" : ""}">${k}</b><span>verdes ${v.join(" / ")} s${pre.has(k) ? " · preempción 🚑" : ""}</span>`).join("");
-  const c = e.crew, msg = $("crewMsg");
-  if (avisoLocal){ msg.textContent = avisoLocal; msg.className = "crewmsg err"; }
-  else {
-    msg.textContent = c.estado === "deliberando" ? "⏳ " + c.mensaje : c.mensaje || "";
-    msg.className = "crewmsg " + (c.estado === "error" ? "err" : c.estado === "listo" ? "ok" : "");
-  }
-  $("btnCrew").disabled = c.estado === "deliberando";
-  $("btnRep").disabled = !c.reporte; $("rep").textContent = c.reporte || "";
+  $("crewMsg").textContent = e.plan.liberada ? "Configuración liberada disponible" + (e.plan.version ? " (" + e.plan.version + ")" : "") : "Aún no hay configuración liberada: apruébala en la consola de supervisión (Streamlit).";
   $("log").textContent = e.log.join("\n");
 }
 
@@ -281,18 +264,7 @@ $("dem").oninput = e => { $("demVal").textContent = e.target.value + " v/min"; }
 $("dem").onchange = e => api("demanda", {valor: +e.target.value});
 $("pre").onchange = e => api("preempcion", {valor: e.target.checked});
 document.querySelectorAll("[data-plan]").forEach(b => b.onclick = () => api("plan", {nombre: b.dataset.plan}));
-const LS = "sigma_gemini_key";
-try { const k = localStorage.getItem(LS); if (k){ $("apiKey").value = k; $("recordar").checked = true; } } catch (_) {}
-$("apiKey").oninput = () => { $("apiKey").classList.remove("falta"); avisoLocal = ""; };
-$("btnCrew").onclick = () => {
-  const k = $("apiKey").value.trim();
-  if (!k){ $("apiKey").classList.add("falta"); $("apiKey").focus(); avisoLocal = "Escribe tu API key de Gemini para usar el Crew en vivo."; return; }
-  avisoLocal = "";
-  try { $("recordar").checked ? localStorage.setItem(LS, k) : localStorage.removeItem(LS); } catch (_) {}
-  api("crew", {api_key: k});
-};
-$("recordar").onchange = () => { try { if (!$("recordar").checked) localStorage.removeItem(LS); } catch (_) {} };
-$("btnRep").onclick = () => $("dlg").showModal();
+
 $("btnRafaga").onclick = () => api("rafaga", {n: 40});
 cv.addEventListener("click", ev => {
   const r = cv.getBoundingClientRect(), x = ev.clientX - r.left, y = ev.clientY - r.top;

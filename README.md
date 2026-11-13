@@ -10,37 +10,58 @@ pinned: false
 
 # SIGMA-Vial · Control semafórico multiagente con CrewAI + SUMO
 
-Sistema que optimiza los tiempos de verde de 4 intersecciones del circuito interno de un campus.
-Una simulación en **SUMO** entrega el estado de tráfico a un equipo de **4 agentes LLM (CrewAI)** que
-deliberan un plan; un validador determinista garantiza las reglas de seguridad y el plan se re-simula
-contra el plan fijo.
+Sistema para el circuito vial de la Universidad Anáhuac Puebla, en dos capas, como lo define la
+documentación del proyecto (Fases 1 a 4):
+
+| | Capa de tiempo real | Capa de supervisión |
+|---|---|---|
+| Qué decide | Qué hace el semáforo ahora | Cómo debe comportarse el sistema (pesos, planes, umbrales) |
+| Tecnología | **SUMO + TraCI** sobre el mapa real del campus (`data/mapa.osm`), sin LLM | **CrewAI**: Analista, Ingeniero, Auditor y Sintetizador (Fase 3) |
+| Dónde está | `src/sigma_sim.py`, `app/motor.py` | `supervision/` |
+| Interfaz | Página «Operación en vivo» | Páginas 1 a 4 de la consola (Fase 4) |
 
 ![Simulación](results/figuras/simulacion.gif)
 
-## Arquitectura
+## Consola de supervisión (Fase 4)
 
-| Agente | Rol | Herramientas |
-|---|---|---|
-| Analista de Tráfico | Estima filas y demanda; detecta sensores degradados | `leer_estado_interseccion`, `estimar_fila` |
-| Planificador de Fases | Maximiza la utilidad esperada U por intersección | `calcular_utilidad`, `estimar_fila` |
-| Coordinador del Circuito | Evita spillback, aplica calendario, prioriza emergencias | `consultar_calendario`, `ocupacion_tramos`, `calcular_utilidad` |
-| Supervisor de Seguridad | Valida reglas duras y emite el plan final | `validar_reglas` |
+```bash
+pip install -r requirements.txt
+streamlit run streamlit_app.py
+```
 
-**Reglas duras:** verde 8–60 s · ámbar 3 s · todo-rojo 2 s · ciclo ≤ 120 s · espera peatonal ≤ 60 s.
+1. **Configurar ciclo**: escenario, telemetría (se valida el CSV), motor de razonamiento.
+2. **Ejecución de agentes**: avance de las 6 tareas y barreras deterministas (validador, publicador, verificación).
+3. **Resultados y decisión**: diagnóstico frente a las líneas base, cambios vigente → candidata, **prueba en el
+   simulador del campus** y los controles *Aprobar y liberar*, *Ajustar pesos*, *Rechazar* y *Descargar*.
+4. **Auditoría y trazabilidad**: dictamen R0–R6, violaciones por intersección y bitácora de decisiones humanas.
 
-## Resultados (misma demanda y semilla)
+Al liberar una configuración, la página **Operación en vivo** puede aplicarla al simulador con el plan
+«Supervisión». La traducción vive en `src/puente.py`.
 
-| Métrica | Plan fijo | SIGMA-Vial | Mejora |
-|---|---:|---:|---:|
-| Espera promedio (s) | 229.9 | 64.9 | 71.8 % |
-| Espera p95 (s) | 694.0 | 173.0 | 75.1 % |
-| Espera máx. continua (s) | 150.0 | 120.0 | 20.0 % |
-| Teleports por bloqueo | 48 | 4 | 91.7 % |
-| Tiempo de ambulancia (s) | 750 | 149 | 80.1 % |
+Motores disponibles: guion fijo (`stub`, sin clave; no demuestra razonamiento), Gemini (con tu API key) y
+qwen2.5:7b por Ollama (solo en una máquina con Ollama).
 
-![Comparación](results/figuras/comparacion.png)
+### Límites que conviene conocer
 
-Detalle: [`results/reporte_crew.md`](results/reporte_crew.md) · [`results/plan_final.json`](results/plan_final.json)
+- La telemetría del diagnóstico (`supervision/datos/metricas_simulacion.csv`) sigue siendo **sintética**.
+  El siguiente paso es generarla con el simulador (ver «Pendientes»).
+- La configuración de la Fase 3 supone 3 fases por intersección. En la red real I4 tiene 4 fases vehiculares;
+  el puente reparte los verdes y **anota cada ajuste** (se ven en la consola).
+- La red no modela peatones: la fase peatonal cuenta como rojo para los vehículos y la espera peatonal no se mide.
+- La prueba en el simulador usa una sola semilla: detecta deterioros graves, no es una prueba estadística.
+
+### Pendientes
+
+- Generar `metricas_simulacion.csv` con SUMO: 4 escenarios × 3 controladores × 10 semillas.
+- Agregar peatones y cruces a la red (`netconvert --sidewalks.guess --crossings.guess`).
+- Implementar las líneas base (Webster y máxima presión) y el Controlador por utilidad en TraCI.
+
+### Código anterior
+
+`legacy/sigma_crew_tiempo_real.py` es el primer Crew (Analista, Planificador, Coordinador, Supervisor), que
+replanificaba los verdes en vivo con un LLM. Se retiró del lazo de control porque la Fase 3 concluyó que un
+modelo de lenguaje no debe decidir el semáforo. `notebooks/SIGMA_Vial_CrewAI.ipynb` y `results/` documentan
+esa versión.
 
 ## ☁️ Correr en la nube gratis — Google Colab (recomendado)
 
@@ -49,8 +70,6 @@ Detalle: [`results/reporte_crew.md`](results/reporte_crew.md) · [`results/plan_
 1. Clic en el botón **Open in Colab**.
 2. **Entorno de ejecución → Ejecutar todo**.
 3. Al terminar, clic en **👉 Abrir SIGMA-Vial en vivo**.
-
-Opcional: agrega `GEMINI_API_KEY` en 🔑 *Secretos* de Colab para el Crew en vivo.
 
 ## ☁️ Otra opción — Docker (Hugging Face Spaces u otra nube con contenedores)
 
@@ -63,7 +82,7 @@ La app está lista para **Streamlit Community Cloud** (gratis):
 1. Entra a **https://share.streamlit.io** e inicia sesión con tu cuenta de GitHub.
 2. **Create app** → *Deploy a public app from GitHub*.
 3. Repository: `lexxvc/sigma-vial` · Branch: `main` · Main file path: `streamlit_app.py`.
-4. En **Advanced settings** elige Python **3.12** y, si quieres usar el Crew en vivo, pega en *Secrets*:
+4. En **Advanced settings** elige Python **3.12** y, si quieres correr el Crew de supervisión con Gemini, pega en *Secrets*:
    ```toml
    GEMINI_API_KEY = "tu_api_key"
    ```
@@ -81,7 +100,7 @@ App web local para ver el circuito funcionando y meter tráfico a mano:
 
 - **Accesos:** botones `+1`, `+10` y `🚑` en los 5 accesos (sur, norte y 3 estacionamientos), o clic sobre el acceso en el mapa (Shift + clic = ambulancia).
 - **Cambio de clase:** ráfaga de 40 autos repartidos entre los accesos.
-- **Plan semafórico en caliente:** plan fijo ↔ plan del Crew guardado ↔ **replanificar con el Crew en vivo** (toma la foto actual de SUMO, corre los 4 agentes y aplica el plan validado).
+- **Plan semafórico en caliente:** plan fijo de la red ↔ configuración liberada en la consola de supervisión.
 - **Preempción de emergencia:** verde forzado (con ámbar previo) cuando una ambulancia se acerca a menos de 60 m de un semáforo.
 - **Métricas en vivo:** vehículos en red, detenidos, espera promedio, salidas/min y tiempo de cruce de ambulancias.
 
@@ -91,42 +110,25 @@ python app/servidor.py            # abre http://localhost:5000
 python app/servidor.py --sumo-gui # además abre la ventana nativa de SUMO
 ```
 
-En Windows basta con doble clic en `iniciar_app.bat`. Para el Crew en vivo, cada usuario escribe su propia API key de Gemini en la app (no se guarda en el servidor).
+En Windows basta con doble clic en `iniciar_app.bat`.
 
 ## Estructura
 
 ```
 sigma-vial/
-├── streamlit_app.py    # app para Streamlit Cloud
-├── packages.txt        # librerías de sistema que necesita SUMO en la nube
-├── .streamlit/config.toml
-├── app/
-│   ├── motor.py        # simulación en tiempo real (hilo dueño de TraCI)
-│   ├── servidor.py     # API Flask + lanzador
-│   └── static/index.html  # interfaz (mapa en canvas + panel de control)
-├── notebooks/SIGMA_Vial_CrewAI.ipynb   # flujo completo con resultados
+├── streamlit_app.py       # enrutador: consola de supervisión + operación en vivo
+├── vistas/                # una página por vista (configurar, ejecucion, resultados, auditoria, operacion)
+├── supervision/           # Crew de la Fase 3: sigma_crew.py, herramientas.py, verificacion.py, datos/, salidas/
 ├── src/
-│   ├── sigma_sim.py    # red, demanda, simulación y métricas (SUMO + TraCI)
-│   ├── sigma_crew.py   # agentes, tareas y herramientas (CrewAI)
-│   └── sigma_anim.py   # animación plan fijo vs Crew
-├── data/               # mapa.osm del campus
-├── results/            # figuras, reporte y plan final
-├── iniciar_app.bat     # lanzador de la app en Windows
-├── requirements.txt
-└── .env.example
+│   ├── sigma_sim.py       # red, demanda, simulación y métricas (SUMO + TraCI)
+│   ├── puente.py          # configuración de supervisión → programas de semáforo; simulación de evaluación
+│   └── sigma_anim.py
+├── app/                   # motor de tiempo real, API Flask e interfaz local
+├── data/mapa.osm          # mapa del campus
+├── legacy/                # primer Crew, fuera de uso
+├── notebooks/ · results/  # corridas y figuras de la versión anterior
+└── requirements.txt · packages.txt · Dockerfile
 ```
-
-## Uso
-
-1. Coloca el mapa en `data/mapa.osm` (ver [`data/README.md`](data/README.md)).
-2. Configura `GEMINI_API_KEY` (Colab Secrets o variable de entorno; ver `.env.example`).
-3. Abre `notebooks/SIGMA_Vial_CrewAI.ipynb` en Colab o local y ejecuta las celdas en orden.
-
-```bash
-pip install -r requirements.txt
-```
-
-LLM por defecto: `gemini/gemini-2.5-flash` (temperatura 0.2).
 
 ## Autor
 

@@ -1,0 +1,33 @@
+escenario,interseccion,t_simulacion_s,tipo,descripcion
+evento_especial,I1,226,degradacion_plan_fijo,Mensajes del Coordinador ausentes por mas de 2 ciclos
+evento_especial,I2,840,spillback_detectado,Fila alcanzo la interseccion anterior
+evento_especial,I1,4805,falla_sensor,Detector de area sin datos por mas de 120 s
+evento_especial,I3,4993,veto_regla_dura,Plan propuesto con verde peatonal inferior al tiempo de despeje
+evento_especial,I2,6047,spillback_detectado,Fila alcanzo la interseccion anterior
+evento_especial,I3,6174,falla_sensor,Detector de area sin datos por mas de 120 s
+falla_sensores,I3,63,falla_sensor,Detector de area sin datos por mas de 120 s
+falla_sensores,I2,504,falla_sensor,Detector de area sin datos por mas de 120 s
+falla_sensores,I3,550,falla_sensor,Detector de area sin datos por mas de 120 s
+falla_sensores,I2,881,spillback_detectado,Fila alcanzo la interseccion anterior
+falla_sensores,I2,1182,falla_sensor,Detector de area sin datos por mas de 120 s
+falla_sensores,I2,1663,spillback_detectado,Fila alcanzo la interseccion anterior
+falla_sensores,I3,1669,falla_sensor,Detector de area sin datos por mas de 120 s
+falla_sensores,I2,1784,degradacion_plan_fijo,Mensajes del Coordinador ausentes por mas de 2 ciclos
+falla_sensores,I2,3516,falla_sensor,Detector de area sin datos por mas de 120 s
+falla_sensores,I2,4052,spillback_detectado,Fila alcanzo la interseccion anterior
+falla_sensores,I1,4140,falla_sensor,Detector de area sin datos por mas de 120 s
+falla_sensores,I2,4183,spillback_detectado,Fila alcanzo la interseccion anterior
+falla_sensores,I1,4869,falla_sensor,Detector de area sin datos por mas de 120 s
+falla_sensores,I4,6689,falla_sensor,Detector de area sin datos por mas de 120 s
+pico_matutino,I1,2416,prioridad_emergencia,Vehiculo de clase emergency detectado aguas arriba
+pico_matutino,I2,3744,spillback_detectado,Fila alcanzo la interseccion anterior
+pico_matutino,I4,4473,spillback_detectado,Fila alcanzo la interseccion anterior
+pico_matutino,I2,4757,spillback_detectado,Fila alcanzo la interseccion anterior
+pico_matutino,I4,5441,falla_sensor,Detector de area sin datos por mas de 120 s
+pico_matutino,I1,5981,degradacion_plan_fijo,Mensajes del Coordinador ausentes por mas de 2 ciclos
+valle,I2,161,spillback_detectado,Fila alcanzo la interseccion anterior
+valle,I2,2299,prioridad_emergencia,Vehiculo de clase emergency detectado aguas arriba
+valle,I3,4229,degradacion_plan_fijo,Mensajes del Coordinador ausentes por mas de 2 ciclos
+valle,I4,4812,prioridad_emergencia,Vehiculo de clase emergency detectado aguas arriba
+valle,I2,5442,spillback_detectado,Fila alcanzo la interseccion anterior
+valle,I2,6986,spillback_detectado,Fila alcanzo la interseccion anterior

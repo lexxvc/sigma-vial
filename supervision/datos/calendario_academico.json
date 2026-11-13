@@ -1,0 +1,50 @@
+{
+  "jornada": {
+    "inicio": "06:30",
+    "fin": "22:30"
+  },
+  "pulsos": [
+    {
+      "nombre": "entrada_matutina",
+      "franja": "06:50-07:20",
+      "intensidad": "alta"
+    },
+    {
+      "nombre": "cambio_clase_1",
+      "franja": "08:55-09:10",
+      "intensidad": "media"
+    },
+    {
+      "nombre": "cambio_clase_2",
+      "franja": "10:55-11:10",
+      "intensidad": "media"
+    },
+    {
+      "nombre": "comida",
+      "franja": "14:00-15:00",
+      "intensidad": "media"
+    },
+    {
+      "nombre": "entrada_vespertina",
+      "franja": "17:50-18:20",
+      "intensidad": "alta"
+    },
+    {
+      "nombre": "salida_nocturna",
+      "franja": "21:50-22:20",
+      "intensidad": "alta"
+    }
+  ],
+  "dias_inhabiles_proximos": [
+    "2026-11-02",
+    "2026-11-16"
+  ],
+  "eventos_campus": [
+    {
+      "nombre": "Ceremonia de titulacion",
+      "fecha": "2026-11-07",
+      "franja": "17:00-21:00",
+      "afluencia_extra_peatonal_pct": 65
+    }
+  ]
+}

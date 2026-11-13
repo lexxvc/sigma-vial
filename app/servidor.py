@@ -40,8 +40,7 @@ def cmd():
     accion = d.get("accion")
     args = {"autos": (d.get("acceso"), d.get("n", 1)), "ambulancia": (d.get("acceso"), d.get("destino")),
             "velocidad": (d.get("valor"),), "demanda": (d.get("valor"),), "preempcion": (d.get("valor"),),
-            "plan": (d.get("nombre"),), "rafaga": (d.get("n", 30),),
-            "crew": (d.get("api_key"),)}.get(accion, ())
+            "plan": (d.get("nombre"),), "rafaga": (d.get("n", 30),)}.get(accion, ())
     motor.cmds.put((accion, *args))
     return jsonify(ok=True)
 

@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.join(RAIZ, "src"))
 
 import traci, sumolib          # noqa: E402
 import sigma_sim as sim        # noqa: E402
+import puente                  # noqa: E402
 
 PASO_S = 0.25                  # resolución de la simulación (s)
 COLOR_LUZ = {"G": "#2ecc71", "g": "#2ecc71", "y": "#f1c40f", "Y": "#f1c40f",
@@ -32,15 +33,6 @@ SALIDAS = {
 PESO_ACCESO = {"sur": 0.45, "norte": 0.35, "est_poniente": 0.07, "est_oriente": 0.07, "est_norponiente": 0.06}
 
 
-def cargar_plan_guardado():
-    try:
-        with open(os.path.join(RAIZ, "results", "plan_final.json"), encoding="utf-8") as f:
-            pf = json.load(f)
-        return {p["interseccion"]: p["verdes_s"] for p in pf["planes"]}
-    except Exception:
-        return {"I1": [8, 8], "I2": [9, 9], "I3": [10, 8], "I4": [12, 8, 8, 8]}
-
-
 class Motor:
     def __init__(self, osm=None, seed=42, sumo_gui=False, etiqueta="default"):
         self.osm = osm or os.path.join(RAIZ, "data", "mapa.osm")
@@ -57,8 +49,7 @@ class Motor:
         self.demanda_vpm = 20.0            # vehículos/min de fondo
         self.preempcion = True
         self.plan_nombre = "fijo"
-        self.plan_guardado = cargar_plan_guardado()
-        self.crew = {"estado": "inactivo", "mensaje": "", "reporte": "", "plan": None}
+        self.supervision = None           # traducción de la configuración liberada que está aplicada
         self.log = []
         self._construir_red()
 
@@ -142,21 +133,26 @@ class Motor:
         t = self.T.simulation.getTime() if self.T else 0
         self.log = ([f"{int(t // 60):02d}:{int(t % 60):02d}  {txt}"] + self.log)[:40]
 
-    def _aplicar_plan(self, nombre, verdes=None, registrar=True):
-        if nombre == "fijo":
-            plan = self.verdes_fijos
-        elif nombre == "crew_guardado":
-            plan = self.plan_guardado
+    def _aplicar_plan(self, nombre, registrar=True):
+        """'fijo' = programa de la red; 'supervision' = configuración liberada en la consola."""
+        config = puente.cargar_liberada() if nombre == "supervision" else None
+        if nombre == "supervision" and not config:
+            self._evento("No hay configuración liberada; sigue el plan fijo")
+            nombre = "fijo"
+        if config:
+            self.supervision = puente.aplicar(self.T, self.tls, config)
+            self.plan_verdes = {k: v["verdes"] + [f"P{v['peatonal']}"] for k, v in self.supervision.items()}
+            self.plan_version = config.get("version", "")
         else:
-            plan = verdes or self.crew.get("plan") or self.plan_guardado
-        for k, t in self.tls.items():
-            v = plan.get(k, self.verdes_fijos[k])
-            self.T.trafficlight.setProgramLogic(t, sim._logica_con_todo_rojo(t, v, conn=self.T))
-            self.T.trafficlight.setProgram(t, "sigma")
-        self.plan_nombre, self.plan_verdes = nombre, {k: plan.get(k, self.verdes_fijos[k]) for k in self.tls}
+            self.supervision = None
+            for k, t in self.tls.items():
+                self.T.trafficlight.setProgramLogic(t, sim._logica_con_todo_rojo(t, self.verdes_fijos[k], conn=self.T))
+                self.T.trafficlight.setProgram(t, "sigma")
+            self.plan_verdes, self.plan_version = dict(self.verdes_fijos), ""
+        self.plan_nombre = nombre
         self.preempt.clear()
         if registrar:
-            self._evento(f"Plan aplicado: {nombre} {self.plan_verdes}")
+            self._evento(f"Plan aplicado: {nombre} {self.plan_version} {self.plan_verdes}")
 
     # ---------------- vehículos ----------------
     def _agregar(self, acceso, n=1, tipo="auto", destino=None):
@@ -218,53 +214,10 @@ class Motor:
         for tls in list(self.preempt):
             p = self.preempt[tls]
             if tls not in activos:
-                self.T.trafficlight.setProgram(tls, "sigma")
+                self.T.trafficlight.setProgram(tls, "supervision" if self.supervision else "sigma")
                 del self.preempt[tls]
             elif p["ambar"] and ahora - p["t"] >= sim.REGLAS["ambar_s"]:
                 self.T.trafficlight.setRedYellowGreenState(tls, p["obj"]); p["ambar"] = False
-
-    # ---------------- Crew en vivo ----------------
-    def _replanificar_crew(self, api_key=None):
-        if self.crew["estado"] == "deliberando":
-            return
-        api_key = (api_key or "").strip() or os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            self.crew.update(estado="error", mensaje="Escribe tu API key de Gemini para usar el Crew en vivo.")
-            self._evento("Crew: falta la API key"); return
-        vivos = self.T.vehicle.getIDList()
-        foto = sim._foto(self.tls, self.verdes_fijos, int(self.T.simulation.getTime()), (), vivos, conn=self.T)
-        foto["emergencia"] = None
-        amb = [v for v in vivos if v.startswith("AMB")]
-        if amb:
-            foto["emergencia"] = {"tipo": "ambulancia", "id": amb[0], "en_red": True}
-        self.crew.update(estado="deliberando", mensaje="4 agentes analizando el estado actual…")
-        self._evento("Crew: deliberando con la foto actual")
-        threading.Thread(target=self._hilo_crew, args=(foto, api_key), daemon=True).start()
-
-    def _hilo_crew(self, foto, api_key):
-        try:
-            import nest_asyncio; nest_asyncio.apply()
-        except Exception:
-            pass
-        try:
-            from crewai import LLM
-            import sigma_crew as sc
-            sc.set_foto(foto)
-            llm = LLM(model=os.environ.get("SIGMA_MODELO", "gemini/gemini-2.5-flash"), temperature=0.2,
-                      api_key=api_key)          # la clave del usuario solo vive en esta llamada
-            res = sc.crear_crew(llm, verbose=False, log=os.path.join(self.build, "sigma_crew_log.txt")).kickoff(
-                inputs={"hora": time.strftime("%H:%M")})
-            pf = res.pydantic
-            plan = {p.interseccion: p.verdes_s for p in pf.planes}
-            val = json.loads(sc.validar_reglas.run(plan_json=json.dumps(plan)))
-            self.crew.update(estado="listo", mensaje="Plan validado por el Supervisor.",
-                             reporte=pf.reporte_markdown, plan=val["plan_corregido"])
-            self.cmds.put(("plan", "crew_vivo"))
-        except Exception as e:
-            msg = str(e).replace(api_key, "***") if api_key else str(e)
-            if any(w in msg.lower() for w in ("api key", "api_key", "permission", "401", "403", "invalid")):
-                msg = "La API key no es válida o no tiene permisos. Revísala y vuelve a intentar."
-            self.crew.update(estado="error", mensaje=f"Error del Crew: {msg}")
 
     # ---------------- bucle ----------------
     def _procesar_cmds(self):
@@ -294,8 +247,6 @@ class Motor:
                     self._agregar(k, max(1, round(int(c[1]) * w)))
             elif accion == "plan":
                 self._aplicar_plan(c[1])
-            elif accion == "crew":
-                self._replanificar_crew(c[1] if len(c) > 1 else None)
 
     def _paso(self):
         self._demanda_fondo()
@@ -340,10 +291,11 @@ class Motor:
                              "completados": len(self.esperas_fin),
                              "amb_ultimo_s": self.amb_tiempos[-1] if self.amb_tiempos else None,
                              "amb_prom_s": round(sum(self.amb_tiempos) / len(self.amb_tiempos)) if self.amb_tiempos else None},
-                "plan": {"nombre": self.plan_nombre, "verdes": self.plan_verdes},
+                "plan": {"nombre": self.plan_nombre, "verdes": self.plan_verdes, "version": self.plan_version,
+                         "liberada": puente.cargar_liberada() is not None},
                 "preempcion_activa": [k for k, v in self.tls.items() if v in self.preempt],
                 "config": {"velocidad": self.velocidad, "demanda_vpm": self.demanda_vpm, "preempcion": self.preempcion},
-                "crew": {k: v for k, v in self.crew.items() if k != "plan"}, "hist": self.hist, "log": self.log}
+                "hist": self.hist, "log": self.log}
 
     def bucle(self):
         self._iniciar()

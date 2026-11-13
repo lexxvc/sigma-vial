@@ -1,0 +1,58 @@
+{
+  "intersecciones": {
+    "I1": {
+      "nombre": "Acceso Principal",
+      "accesos": 4,
+      "cruces_peatonales": 2,
+      "ancho_cruce_m": 12.0,
+      "demanda_base_vph": 820,
+      "demanda_peatonal_base_pph": 240
+    },
+    "I2": {
+      "nombre": "Estacionamiento Norte",
+      "accesos": 3,
+      "cruces_peatonales": 2,
+      "ancho_cruce_m": 9.5,
+      "demanda_base_vph": 540,
+      "demanda_peatonal_base_pph": 410
+    },
+    "I3": {
+      "nombre": "Plaza Central",
+      "accesos": 3,
+      "cruces_peatonales": 3,
+      "ancho_cruce_m": 14.0,
+      "demanda_base_vph": 380,
+      "demanda_peatonal_base_pph": 680
+    },
+    "I4": {
+      "nombre": "Salida Oriente",
+      "accesos": 4,
+      "cruces_peatonales": 1,
+      "ancho_cruce_m": 10.5,
+      "demanda_base_vph": 760,
+      "demanda_peatonal_base_pph": 150
+    }
+  },
+  "tramos": [
+    [
+      "I1",
+      "I2",
+      22
+    ],
+    [
+      "I2",
+      "I3",
+      14
+    ],
+    [
+      "I3",
+      "I4",
+      25
+    ],
+    [
+      "I4",
+      "I1",
+      30
+    ]
+  ]
+}

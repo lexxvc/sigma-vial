@@ -16,3 +16,8 @@ sigma_resultado.json
 
 # Interfaz en vivo
 build/
+
+# Consola de supervisión: estado que se genera al usarla
+supervision/datos/configuracion_liberada.json
+supervision/datos/bitacora_liberaciones.csv
+supervision/datos/*.original

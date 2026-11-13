@@ -1,0 +1,23 @@
+{
+  "ciclo_de_auditoria": "Auditoría de propuesta corregida",
+  "dictamen_propuesta": {
+    "veredicto": "APROBADO",
+    "violaciones": [],
+    "advertencias": []
+  },
+  "reglas_evaluadas": [
+    "R0 esquema y completitud",
+    "R1 verde vehicular",
+    "R2 ciclo maximo",
+    "R3 despeje peatonal",
+    "R4 consistencia de fases",
+    "R5 espera peatonal maxima",
+    "R6 espera maxima por carril"
+  ],
+  "autorizacion_de_publicacion": true,
+  "publicacion": {
+    "resultado": "publicado",
+    "archivo": "configuracion_aprobada.json",
+    "fuente": "propuesta_v2"
+  }
+}

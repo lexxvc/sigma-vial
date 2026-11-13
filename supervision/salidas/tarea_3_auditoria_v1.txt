@@ -1,0 +1,38 @@
+{
+  "ciclo_de_auditoria": "Auditoría de Propuesta vs Normativa",
+  "dictamen_configuracion_vigente": {
+    "veredicto": "RECHAZADO",
+    "violaciones": [
+      "I1: las fases suman 103s (incluye 15s de ambar y todo-rojo) y exceden el ciclo de 95s (R4)",
+      "I1: espera peatonal maxima implicita 79s > limite 60s (R5)",
+      "I1: espera maxima del acceso secundario 67s > limite 60s (R6)",
+      "I2: las fases suman 93s (incluye 15s de ambar y todo-rojo) y exceden el ciclo de 85s (R4)",
+      "I2: espera peatonal maxima implicita 71s > limite 60s (R5)",
+      "I2: espera maxima del acceso secundario 61s > limite 60s (R6)",
+      "I3: verde peatonal 11s < despeje minimo 14.0s para un cruce de 14.0m a 1.0 m/s (R3)",
+      "I3: las fases suman 94s (incluye 15s de ambar y todo-rojo) y exceden el ciclo de 85s (R4)",
+      "I3: espera peatonal maxima implicita 74s > limite 60s (R5)",
+      "I3: espera maxima del acceso secundario 63s > limite 60s (R6)",
+      "I4: las fases suman 103s (incluye 15s de ambar y todo-rojo) y exceden el ciclo de 95s (R4)",
+      "I4: espera peatonal maxima implicita 83s > limite 60s (R5)",
+      "I4: espera maxima del acceso secundario 69s > limite 60s (R6)"
+    ],
+    "observacion": "La configuración vigente viola varias reglas duras, incluyendo exceso de tiempo de ciclo, espera peatonal y espera máxima por carril."
+  },
+  "dictamen_propuesta": {
+    "veredicto": "APROBADO",
+    "violaciones": [],
+    "observacion": "La propuesta v1 cumple con todas las reglas duras y la normativa de cruce peatonal."
+  },
+  "reglas_evaluadas": [
+    "R0 esquema y completitud",
+    "R1 verde vehicular",
+    "R2 ciclo maximo",
+    "R3 despeje peatonal",
+    "R4 consistencia de fases",
+    "R5 espera peatonal maxima",
+    "R6 espera maxima por carril"
+  ],
+  "autorizacion_de_publicacion": true,
+  "instruccion_al_ingeniero": "La propuesta v1 cumple con todas las reglas duras y la normativa de cruce peatonal. Por favor, proceda con la publicación de esta configuración."
+}

@@ -1,4 +1,4 @@
-streamlit>=1.37
+streamlit>=1.50
 plotly
 eclipse-sumo
 traci
@@ -10,3 +10,4 @@ pandas
 pillow
 nest_asyncio
 flask
+scipy

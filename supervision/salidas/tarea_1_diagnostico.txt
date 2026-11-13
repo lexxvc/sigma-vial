@@ -1,0 +1,86 @@
+Based on the provided data, here is the analysis of the performance of SIGMA-Vial during the pico_matutino (morning peak) scenario:
+
+### Hallazgos
+- **Intersección I1:**
+  - **Espera peatonal (vs. Plan Fijo Webster):** -37.4% (p < 0.05, MEJORA)
+  - **Espera peatonal (vs. Máxima Presión):** -46.4% (p < 0.05, MEJORA)
+  - **Spillback (vs. Plan Fijo Webster):** -81.4% (p < 0.05, MEJORA)
+  - **Spillback (vs. Máxima Presión):** 6.3% (p > 0.05, SIN DIFERENCIA SIGNIFICATIVA)
+
+- **Intersección I2:**
+  - **Espera peatonal (vs. Plan Fijo Webster):** -26.9% (p < 0.05, MEJORA)
+  - **Espera peatonal (vs. Máxima Presión):** -47.1% (p < 0.05, MEJORA)
+  - **Spillback (vs. Plan Fijo Webster):** 105.6% (p > 0.05, SIN DIFERENCIA SIGNIFICATIVA)
+  - **Spillback (vs. Máxima Presión):** 589.2% (p < 0.05, EMPEORA)
+
+- **Intersección I3:**
+  - **Espera peatonal (vs. Plan Fijo Webster):** 64.3% (p < 0.05, EMPEORA)
+  - **Espera peatonal (vs. Máxima Presión):** 26.6% (p < 0.05, EMPEORA)
+  - **Spillback (vs. Plan Fijo Webster):** 96.8% (p > 0.05, SIN DIFERENCIA SIGNIFICATIVA)
+  - **Spillback (vs. Máxima Presión):** 29.8% (p > 0.05, SIN DIFERENCIA SIGNIFICATIVA)
+
+- **Intersección I4:**
+  - **Espera peatonal (vs. Plan Fijo Webster):** -29.3% (p < 0.05, MEJORA)
+  - **Espera peatonal (vs. Máxima Presión):** -38.1% (p < 0.05, MEJORA)
+  - **Spillback (vs. Plan Fijo Webster):** -76.8% (p < 0.05, MEJORA)
+  - **Spillback (vs. Máxima Presión):** -5.3% (p > 0.05, SIN DIFERENCIA SIGNIFICATIVA)
+
+### Conclusion
+- **Intersección I3** shows significant degradation in performance compared to both the Plan Fijo Webster and Máxima Presión baselines, with a 64.3% increase in pedestrian waiting time and a 26.6% increase in spillback events. This suggests that the demand at this intersection is higher than expected, or the configuration might need adjustment.
+- **Intersección I2** also shows significant degradation in spillback events compared to the Máxima Presión baseline, with a 589.2% increase. This indicates that the demand at this intersection is higher than the model predicts, or the configuration might need to be adjusted to handle the increased demand.
+
+### Prioridad de Atención
+1. **Intersección I3**
+2. **Intersección I2**
+
+### Final Answer
+```json
+{
+  "escenario_analizado": "pico_matutino",
+  "replicas": 10,
+  "hallazgos": [
+    {
+      "interseccion": "I1",
+      "espera_peat_media_s": -46.4,
+      "p_wilcoxon": 0.00195,
+      "espera_veh_media_s": -37.4,
+      "p_wilcoxon": 0.00391,
+      "spillback_eventos_h": 6.3,
+      "p_wilcoxon": 0.94531,
+      "severidad": "baja"
+    },
+    {
+      "interseccion": "I2",
+      "espera_peat_media_s": -47.1,
+      "p_wilcoxon": 0.00195,
+      "espera_veh_media_s": -26.9,
+      "p_wilcoxon": 0.00977,
+      "spillback_eventos_h": 589.2,
+      "p_wilcoxon": 0.10547,
+      "severidad": "alta"
+    },
+    {
+      "interseccion": "I3",
+      "espera_peat_media_s": 26.6,
+      "p_wilcoxon": 0.00391,
+      "espera_veh_media_s": 64.3,
+      "p_wilcoxon": 0.00195,
+      "spillback_eventos_h": 29.8,
+      "p_wilcoxon": 0.6875,
+      "severidad": "alta"
+    },
+    {
+      "interseccion": "I4",
+      "espera_peat_media_s": -38.1,
+      "p_wilcoxon": 0.00195,
+      "espera_veh_media_s": -29.3,
+      "p_wilcoxon": 0.00195,
+      "spillback_eventos_h": -5.3,
+      "p_wilcoxon": 0.8457,
+      "severidad": "baja"
+    }
+  ],
+  "conclusion": "Intersección I3 y I2 presentan problemas significativos en el pico matutino, con mayor demanda de peatones y eventos de spillback. Se recomienda revisar la configuración o ajustar la demanda en estas intersecciones.",
+  "prioridad_de_atencion": ["I3", "I2"]
+}
+```
