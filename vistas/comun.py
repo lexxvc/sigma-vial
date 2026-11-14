@@ -129,7 +129,11 @@ class Corrida:
             if api_key:
                 os.environ["GEMINI_API_KEY"] = api_key
             import crewai  # noqa: F401
-            sc = importlib.reload(sys.modules["sigma_crew"]) if "sigma_crew" in sys.modules else importlib.import_module("sigma_crew")
+            # Se carga por ruta: así nunca se confunde con otro sigma_crew.py que quede en src/.
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("sigma_crew_supervision", os.path.join(DIR_SUP, "sigma_crew.py"))
+            sc = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(sc)
             self.anotar(f"Crew armado · motor: {motor} · escenario: {escenario}")
 
             def al_terminar(salida):
