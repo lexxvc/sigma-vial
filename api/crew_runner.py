@@ -198,6 +198,10 @@ def _registrar_oyentes():
         txt = ev.response if isinstance(ev.response, str) else ""
         m = re.search(r"Thought:\s*(.+?)(?:\n(?:Action|Final Answer)|$)", txt, re.S)
         txt = (m.group(1) if m else txt).strip()
+        # La respuesta final de cada tarea ya se muestra como «Tarea N concluida»; aquí solo
+        # se deja el razonamiento intermedio en texto libre, no JSON ni el reporte.
+        if txt and not m and (txt.lstrip("`").startswith(("json", "{", "#", "[")) or len(txt) > 600):
+            return
         if txt:
             c.anotar("razonamiento", etiqueta(getattr(ev, "agent_role", "")), txt[:260], {}, ev.timestamp)
 

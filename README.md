@@ -20,6 +20,8 @@ cada semáforo. Una **capa de supervisión táctica**, construida con **CrewAI**
 diagnostica el desempeño, propone ajustes, los audita contra la normativa y deja la publicación final en manos
 de una persona, desde una **consola web de supervisión con intervención humana** (Human-in-the-Loop).
 
+**Demo en vivo:** https://lexxco-sigma-vial.hf.space · Space: https://huggingface.co/spaces/lexxco/sigma-vial
+
 ![Ejecución del Crew en vivo](docs/capturas/2_ejecucion.png)
 
 ---
@@ -194,9 +196,9 @@ La primera vez la vista 4 tarda unos segundos mientras `netconvert` construye la
 
 ### 3.3 Nube
 
-- **Hugging Face Spaces (Docker).** El repositorio ya trae `Dockerfile` y el encabezado YAML de este README.
-  Crea un Space tipo *Docker*, conecta este repositorio y agrega `GEMINI_API_KEY` en *Settings → Secrets*. La
-  consola queda en el puerto 7860.
+- **Hugging Face Spaces (Docker), despliegue activo:** https://lexxco-sigma-vial.hf.space. El Space contiene solo
+  un Dockerfile que clona este repositorio en cada build; tras subir cambios a GitHub basta *Settings → Factory
+  rebuild*. La clave va en *Settings → Secrets* como `GEMINI_API_KEY`. Los Spaces con Docker requieren cuenta PRO.
 - **Google Colab.** [`notebooks/consola_colab.ipynb`](notebooks/consola_colab.ipynb):
   [![Abrir en Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/lexxvc/sigma-vial/blob/main/notebooks/consola_colab.ipynb)
   → *Ejecutar todo* → abrir el link.
