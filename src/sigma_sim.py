@@ -27,10 +27,12 @@ SAT_FLOW = 1800  # veh/h por carril (valor típico; calibrar con aforos)
 
 def construir_red(osm="data/mapa.osm", net="campus_tls.net.xml"):
     tls = ",".join(v["tls"] for v in INTERSECCIONES.values())
-    subprocess.run([os.path.join(SUMO_HOME, "bin", "netconvert"), "--osm-files", osm, "-o", net, "--geometry.remove",
+    r = subprocess.run([os.path.join(SUMO_HOME, "bin", "netconvert"), "--osm-files", osm, "-o", net, "--geometry.remove",
                     "--roundabouts.guess", "--junctions.join", "--keep-edges.by-vclass", "passenger",
                     "--remove-edges.isolated", "--no-warnings", "--tls.set", tls,
-                    "--tls.default-type", "static"], check=True)
+                    "--tls.default-type", "static"], capture_output=True, text=True)
+    if r.returncode != 0:
+        raise RuntimeError(f"netconvert falló ({r.returncode}): {(r.stderr or r.stdout)[-600:]}")
     return net
 
 

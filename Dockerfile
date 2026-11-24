@@ -3,7 +3,7 @@ FROM python:3.12-slim
 
 # librerías del sistema que necesita el binario de SUMO
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        libgl1 libx11-6 libxext6 libxrender1 libxcb1 && rm -rf /var/lib/apt/lists/*
+        libatomic1 libexpat1 libgl1 libx11-6 libxext6 libxrender1 libxcb1 && rm -rf /var/lib/apt/lists/*
 
 RUN useradd -m -u 1000 user
 WORKDIR /app

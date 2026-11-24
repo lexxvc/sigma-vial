@@ -433,7 +433,7 @@ def _arrancar_sim():
             threading.Thread(target=m.bucle, daemon=True).start()
             _sim["motor"] = m
         except Exception as e:                   # noqa: BLE001
-            _sim["error"] = str(e)[:300]
+            _sim["error"] = str(e)[-800:]
         finally:
             _sim["iniciando"] = False
     threading.Thread(target=hilo, daemon=True).start()
