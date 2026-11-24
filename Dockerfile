@@ -14,4 +14,4 @@ USER user
 
 ENV PORT=7860
 EXPOSE 7860
-CMD ["sh", "-c", "python app/servidor.py --puerto ${PORT} --no-abrir"]
+CMD ["sh", "-c", "uvicorn api.main:app --host 0.0.0.0 --port ${PORT}"]

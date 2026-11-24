@@ -23,6 +23,7 @@ la herramienta, no el guion.
 """
 
 import json
+import os
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -377,6 +378,9 @@ class Manejador(BaseHTTPRequestHandler):
         pass  # silencia el log HTTP para no ensuciar la salida del Crew
 
     def do_POST(self):
+        # Pausa opcional para que la consola muestre el avance a ritmo legible
+        # (la corrida guionada tarda ~10 s sin pausa). No cambia el resultado.
+        time.sleep(float(os.getenv("SIGMA_STUB_PAUSA", "0")))
         n = int(self.headers.get("Content-Length", 0))
         cuerpo = json.loads(self.rfile.read(n) or b"{}")
         prompt = "\n".join(

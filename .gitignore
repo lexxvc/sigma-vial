@@ -21,3 +21,7 @@ build/
 supervision/datos/configuracion_liberada.json
 supervision/datos/bitacora_liberaciones.csv
 supervision/datos/*.original
+
+# Consola web (FastAPI): bitácora local
+data/sigma.db
+supervision/datos/*.csv.original

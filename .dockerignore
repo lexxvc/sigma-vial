@@ -2,3 +2,6 @@ build/
 __pycache__/
 .env
 notebooks/
+legacy/
+data/sigma.db
+.git/

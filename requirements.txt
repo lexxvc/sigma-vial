@@ -1,13 +1,18 @@
-streamlit>=1.50
-plotly
-eclipse-sumo
-traci
-sumolib
-crewai[google-genai]
-pydantic
-matplotlib
-pandas
-pillow
-nest_asyncio
-flask
-scipy
+# SIGMA-Vial · Python 3.11 o 3.12 (probado con 3.12.3)
+# --- capa MAS (CrewAI) ---
+crewai[google-genai]==1.15.44
+pydantic==2.12.5
+python-dotenv==1.2.4
+scipy>=1.13,<1.19
+# --- API y consola web (Fase 4) ---
+fastapi==0.165.0
+uvicorn[standard]==0.54.0
+# --- capa de tiempo real (SUMO + TraCI) ---
+eclipse-sumo==1.28.0
+traci==1.28.0
+sumolib==1.28.0
+# --- consola alternativa en Streamlit (opcional) ---
+streamlit==1.67.0
+plotly==7.1.0
+pandas>=2.2,<3.2
+matplotlib>=3.8,<3.12
