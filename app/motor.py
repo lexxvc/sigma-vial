@@ -118,6 +118,9 @@ class Motor:
         self.amb_inicio, self.amb_tiempos = {}, []
         self.esperas_fin, self.esperas_vivos, self.llegadas = [], {}, []
         self.hist = []
+        self.forzados = {}                 # tls -> instante en que termina el todo-rojo manual
+        self.carriles = {k: sorted({l[0][0] for l in self.T.trafficlight.getControlledLinks(t) if l})
+                         for k, t in self.tls.items()}
         self._aplicar_plan(self.plan_nombre, registrar=False)
         self._evento("Simulación iniciada")
 
@@ -219,6 +222,42 @@ class Motor:
             elif p["ambar"] and ahora - p["t"] >= sim.REGLAS["ambar_s"]:
                 self.T.trafficlight.setRedYellowGreenState(tls, p["obj"]); p["ambar"] = False
 
+    # ---------------- acciones manuales del operador ----------------
+    def _todo_rojo(self, inter, segundos):
+        tls = self.tls.get(inter)
+        if not tls:
+            return
+        n = len(self.T.trafficlight.getRedYellowGreenState(tls))
+        self.T.trafficlight.setRedYellowGreenState(tls, "r" * n)
+        self.forzados[tls] = self.T.simulation.getTime() + segundos
+        self._evento(f"Operador: todo-rojo en {inter} por {segundos:.0f} s")
+
+    def _extender(self, inter, segundos):
+        tls = self.tls.get(inter)
+        if not tls or tls in self.forzados or tls in self.preempt:
+            return
+        restante = self.T.trafficlight.getNextSwitch(tls) - self.T.simulation.getTime()
+        self.T.trafficlight.setPhaseDuration(tls, max(0.0, restante) + segundos)
+        self._evento(f"Operador: fase actual de {inter} extendida +{segundos:.0f} s")
+
+    def _liberar_forzados(self):
+        ahora = self.T.simulation.getTime()
+        for tls, hasta in list(self.forzados.items()):
+            if ahora >= hasta:
+                self.T.trafficlight.setProgram(tls, "supervision" if self.supervision else "sigma")
+                del self.forzados[tls]
+
+    def _nodos(self):
+        """Estado por intersección para el diagnóstico del nodo (vista 4)."""
+        ahora, out = self.T.simulation.getTime(), {}
+        for k, tls in self.tls.items():
+            fila = sum(self.T.lane.getLastStepHaltingNumber(l) for l in self.carriles.get(k, []))
+            out[k] = {"fase": self.T.trafficlight.getPhase(tls),
+                      "estado": self.T.trafficlight.getRedYellowGreenState(tls),
+                      "restante_s": round(max(0.0, self.T.trafficlight.getNextSwitch(tls) - ahora), 1),
+                      "fila_veh": fila, "todo_rojo": tls in self.forzados, "preempcion": tls in self.preempt}
+        return out
+
     # ---------------- bucle ----------------
     def _procesar_cmds(self):
         while not self.cmds.empty():
@@ -247,6 +286,10 @@ class Motor:
                     self._agregar(k, max(1, round(int(c[1]) * w)))
             elif accion == "plan":
                 self._aplicar_plan(c[1])
+            elif accion == "todo_rojo":       # actuador manual del operador (vista 4)
+                self._todo_rojo(c[1], float(c[2] or 15))
+            elif accion == "extender":        # extiende la fase en curso (p. ej. la peatonal)
+                self._extender(c[1], float(c[2] or 5))
 
     def _paso(self):
         self._demanda_fondo()
@@ -264,6 +307,7 @@ class Motor:
         for v in vivos:
             self.esperas_vivos[v] = self.T.vehicle.getAccumulatedWaitingTime(v)
         self._preempcion(vivos)
+        self._liberar_forzados()
         if abs(t % 5) < 1e-6:   # cada 5 s
             det = sum(1 for v in vivos if self.T.vehicle.getSpeed(v) < 0.1)
             self.hist = (self.hist + [[t, len(vivos), det]])[-240:]
@@ -295,7 +339,7 @@ class Motor:
                          "liberada": puente.cargar_liberada() is not None},
                 "preempcion_activa": [k for k, v in self.tls.items() if v in self.preempt],
                 "config": {"velocidad": self.velocidad, "demanda_vpm": self.demanda_vpm, "preempcion": self.preempcion},
-                "hist": self.hist, "log": self.log}
+                "nodos": self._nodos(), "hist": self.hist, "log": self.log}
 
     def bucle(self):
         self._iniciar()

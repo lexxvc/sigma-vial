@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SIGMA-Vial · Consola de supervisión táctica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/web/tailwind.css">
+<link rel="stylesheet" href="/web/estilos.css">
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+<div class="flex min-h-screen">
+
+  <!-- ============ barra lateral ============ -->
+  <aside class="w-60 shrink-0 bg-navy-800 text-slate-200 flex flex-col fixed inset-y-0 left-0 z-30">
+    <div class="flex items-center gap-3 px-4 py-4 border-b border-white/10">
+      <div class="h-9 w-9 rounded-full bg-white/10 grid place-items-center text-xs font-bold">SV</div>
+      <div><div class="font-bold text-white leading-tight">SIGMA-Vial</div>
+        <div class="text-[10px] tracking-widest text-slate-400">SUPERVISIÓN TÁCTICA</div></div>
+    </div>
+    <nav class="px-2 pt-4 space-y-1 text-sm">
+      <div class="px-3 pb-2 text-[10px] tracking-widest text-slate-400">NAVEGACIÓN</div>
+      <a href="#configuracion" data-nav="configuracion" class="nav"><span class="ico">⚙</span>Configuración</a>
+      <a href="#ejecucion" data-nav="ejecucion" class="nav"><span class="ico">⎔</span>Ejecución</a>
+      <a href="#resultados" data-nav="resultados" class="nav"><span class="ico">▤</span>Resultados</a>
+      <a href="#mapa" data-nav="mapa" class="nav"><span class="ico">⌖</span>Mapa y auditoría</a>
+    </nav>
+    <div class="mt-auto p-3 space-y-3">
+      <div class="rounded-lg bg-white/5 p-3 text-xs">
+        <div class="flex justify-between text-[10px] tracking-widest text-slate-400"><span>NODO DE SECTOR</span><span class="h-2 w-2 rounded-full bg-emerald-400 mt-0.5"></span></div>
+        <div class="mt-1 text-slate-100">Circuito vial · Campus Anáhuac Puebla</div>
+        <div class="text-slate-400">4 intersecciones (I1–I4)</div>
+        <div class="mt-2 flex justify-between"><span class="text-slate-400">Telemetría</span><span class="text-amber-300">sintética · Fase 3</span></div>
+      </div>
+      <div class="flex justify-between text-[10px] text-slate-500 px-1"><span>Build v2.0 · entrega final</span><span>FastAPI · CrewAI</span></div>
+    </div>
+  </aside>
+
+  <!-- ============ contenido ============ -->
+  <div class="flex-1 ml-60 min-w-0">
+    <!-- barra superior persistente -->
+    <header class="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-slate-200 px-6 h-16 flex items-center gap-4">
+      <div class="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5">
+        <div><div class="text-[10px] tracking-widest text-slate-500">ESCENARIO ACTIVO</div>
+          <select id="selEscTop" class="text-sm font-semibold bg-transparent outline-none -ml-1"></select></div>
+      </div>
+      <span class="chip bg-emerald-50 text-emerald-700">● SUMO + TraCI</span>
+      <span id="chipMotor" class="chip bg-slate-100 text-slate-600">Motor: —</span>
+      <div class="flex-1"></div>
+      <span id="chipSup" class="chip bg-emerald-50 text-emerald-700">● SUPERVISOR: ACTIVO · REGLAS DURAS APLICADAS</span>
+      <div class="flex items-center gap-2 pl-3 border-l border-slate-200">
+        <div class="h-9 w-9 rounded-full bg-navy-800 text-white grid place-items-center text-xs font-bold" id="avatar">OP</div>
+        <div class="leading-tight"><input id="operador" class="text-sm font-semibold w-44 outline-none bg-transparent" placeholder="Nombre del operador">
+          <div class="text-[11px] text-slate-500">Operador en turno</div></div>
+      </div>
+    </header>
+
+    <main class="p-6 max-w-[1400px]">
+      <!-- =============== VISTA 1 =============== -->
+      <section id="v-configuracion" class="vista">
+        <div class="flex items-start justify-between gap-6">
+          <div><div class="crumb">CICLO DE SUPERVISIÓN / <b>CONFIGURACIÓN INICIAL</b></div>
+            <h1 class="h1">Configuración del ciclo y restricciones previas</h1>
+            <p class="text-slate-600 max-w-3xl">Selecciona el escenario, verifica la telemetría y revisa las reglas duras antes de iniciar el ciclo de supervisión táctica. Esta capa opera fuera del lazo de control en tiempo real.</p></div>
+          <div class="flex gap-3 shrink-0">
+            <div class="tile"><div class="lbl">ESTADO</div><div id="estadoListo" class="font-bold text-sm">—</div></div>
+            <div class="tile"><div class="lbl">CAPA DE EJECUCIÓN</div><div class="font-bold text-sm">SUMO · 4 nodos</div></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-12 gap-5 mt-5">
+          <div class="col-span-7 space-y-5">
+            <div class="card">
+              <div class="card-h"><div><h3>Selección de escenario</h3><p>Régimen de operación del circuito (Fase 2)</p></div>
+                <span id="perfilChip" class="chip bg-inst-50 text-inst">Perfil</span></div>
+              <label class="lbl">Escenario activo</label>
+              <select id="selEsc" class="input mt-1"></select>
+              <div class="mt-3 rounded-lg bg-inst-50 border border-inst-100 p-4 text-sm">
+                <div class="font-semibold" id="perfilTit">—</div><p id="perfilTxt" class="text-slate-700 mt-1"></p></div>
+              <div class="grid grid-cols-3 gap-3 mt-3">
+                <div class="tile"><div class="lbl">FRANJA</div><div id="franja" class="kpi-s">—</div></div>
+                <div class="tile"><div class="lbl">MAYOR DEMANDA PEATONAL</div><div class="kpi-s">I3 Plaza Central</div><div class="text-xs text-slate-500">680 peat/h base</div></div>
+                <div class="tile"><div class="lbl">RÉPLICAS POR CONFIGURACIÓN</div><div class="kpi-s">10</div><div class="text-xs text-slate-500">mínimo para Wilcoxon pareada</div></div>
+              </div>
+              <div class="mt-4"><label class="lbl">Motor de razonamiento de los agentes</label>
+                <div id="motores" class="grid grid-cols-3 gap-2 mt-1"></div></div>
+            </div>
+
+            <div class="card">
+              <div class="card-h"><div><h3>Telemetría y normativa requeridas</h3><p>Fuentes que consumen las herramientas del Crew</p></div>
+                <span id="chipFuentes" class="chip">—</span></div>
+              <div id="fuentes" class="space-y-2"></div>
+              <label id="drop" class="mt-3 block rounded-lg border-2 border-dashed border-slate-300 p-5 text-center text-sm text-slate-500 cursor-pointer hover:border-inst hover:bg-inst-50">
+                <input type="file" id="archivo" accept=".csv" class="hidden">
+                <div class="text-lg">⇪</div><b class="text-slate-700">Arrastra o elige un CSV de telemetría</b>
+                <div class="text-xs">Columnas: escenario, interseccion, controlador, replica, espera_veh_media_s, espera_peat_media_s, spillback_eventos_h</div></label>
+              <div class="flex gap-2 mt-3 text-sm">
+                <button id="btnInvalido" class="btn-ghost">Probar con un aforo de campo (formato inválido)</button>
+                <button id="btnRestablecer" class="btn-ghost">↺ Restablecer fuentes</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-span-5 space-y-5">
+            <div class="card">
+              <div class="card-h"><div><h3>Motor de reglas duras</h3><p>Verificadas por código, no por el modelo</p></div>
+                <span class="chip bg-emerald-50 text-emerald-700">🔒 R1–R5 activas</span></div>
+              <p class="text-xs text-slate-600">Los umbrales provienen de <code>normativa.json</code> (Fase 2 y Manual de Calles, SEDATU 2019). Los evalúa <code>validador_reglas_duras</code> en Python; el Agente Auditor reporta su veredicto literal y no puede autorizar excepciones.</p>
+              <div id="reglas" class="space-y-2 mt-3"></div>
+              <div class="mt-3 text-[11px] tracking-widest text-slate-500">VERIFICACIONES COMPLEMENTARIAS</div>
+              <div id="reglasC" class="space-y-2 mt-2"></div>
+              <div class="mt-3 rounded-lg bg-emerald-50 border border-emerald-100 p-3 text-xs text-emerald-900">
+                <b>Política del Supervisor:</b> el Auditor veta toda propuesta que viole una regla dura, sin importar cuánto mejore el desempeño. El publicador vuelve a validar antes de escribir y el servidor valida por tercera vez antes de aceptar la autorización humana.</div>
+              <div class="mt-4 text-[11px] tracking-widest text-slate-500">CADENA DE VERIFICACIÓN</div>
+              <div class="mt-2 flex items-center justify-between text-[11px] text-center">
+                <div class="step"><span>✎</span>Propuesta<br><i>Ingeniero</i></div><b>→</b>
+                <div class="step"><span>✓</span>Validador<br><i>Auditor</i></div><b>→</b>
+                <div class="step"><span>⛁</span>Publicador<br><i>revalida</i></div><b>→</b>
+                <div class="step"><span>✋</span>Operador<br><i>3.ª barrera</i></div><b>→</b>
+                <div class="step"><span>⚡</span>Tiempo real<br><i>SUMO</i></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-h"><h3 class="text-sm">Intersecciones objetivo</h3><span class="text-xs text-inst">Circuito Anáhuac</span></div>
+              <div id="interObj" class="grid grid-cols-4 gap-2 text-center text-xs"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-5 flex items-center gap-4">
+          <div id="iconListo" class="h-10 w-10 rounded-full grid place-items-center text-lg">✓</div>
+          <div class="flex-1"><div id="msgListo" class="font-semibold text-sm">—</div><div id="msgListo2" class="text-xs text-slate-500"></div></div>
+          <button id="btnIniciar" class="btn-primary">Iniciar ciclo de supervisión →</button>
+        </div>
+      </section>
+
+      <!-- =============== VISTA 2 =============== -->
+      <section id="v-ejecucion" class="vista hidden">
+        <div class="card">
+          <div class="flex items-center justify-between">
+            <div><div class="crumb">CICLO DE SUPERVISIÓN <span id="eNum">—</span> / <b>EJECUCIÓN</b></div>
+              <h1 class="h1 mb-0">Ciclo de supervisión en ejecución</h1></div>
+            <div class="flex items-center gap-2">
+              <span id="eChip" class="chip bg-slate-100">Sin ciclo</span>
+              <button id="btnDetener" class="btn-danger-ghost">⊗ Detener ciclo</button>
+              <button id="btnVerRes" class="btn-dark" disabled>Ver resultados →</button>
+            </div>
+          </div>
+          <div class="mt-4 flex justify-between text-xs text-slate-500"><span>Pipeline del Crew · circuito completo (I1–I4)</span><b id="eProg" class="text-slate-700">0 %</b></div>
+          <div class="h-2 bg-slate-100 rounded-full mt-1 overflow-hidden"><div id="eBar" class="h-full bg-emerald-600 transition-all" style="width:0%"></div></div>
+        </div>
+        <div id="eError" class="hidden mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"></div>
+        <div class="grid grid-cols-12 gap-5 mt-5">
+          <div class="col-span-5">
+            <div class="flex items-center justify-between mb-3"><h3 class="font-semibold">Pipeline del Crew</h3><span class="chip bg-slate-100">6 tareas · Process.sequential</span></div>
+            <div id="pipeline" class="space-y-3"></div>
+          </div>
+          <div class="col-span-7">
+            <div class="flex items-center justify-between mb-3"><h3 class="font-semibold">Razonamiento y llamadas a herramientas</h3><span class="text-xs text-emerald-700">● CrewAI · eventos en vivo (SSE)</span></div>
+            <div class="rounded-xl bg-[#0d1b2a] text-slate-200 shadow-lg overflow-hidden">
+              <div class="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+                <div class="flex items-center gap-2 text-xs text-slate-400"><span class="dot bg-red-400"></span><span class="dot bg-amber-300"></span><span class="dot bg-emerald-400"></span><span class="ml-2 font-mono">sigma-vial://crew/eventos</span></div>
+                <div id="filtros" class="flex gap-1 text-xs">
+                  <button data-f="todo" class="fil sel">Todo</button><button data-f="herr" class="fil">Herramientas</button>
+                  <button data-f="razon" class="fil">Razonamiento</button><button data-f="veto" class="fil">Vetos</button></div>
+              </div>
+              <div id="log" class="font-mono text-[12.5px] leading-relaxed p-4 h-[560px] overflow-y-auto"></div>
+              <div class="px-4 py-3 border-t border-white/10 text-xs text-slate-400 flex items-center justify-between">
+                <span>🛡 Veredictos emitidos por <code>validador_reglas_duras</code>, no por el modelo. Las líneas en cursiva son texto generado por el LLM.</span>
+                <button id="btnIrRes" class="btn-ok text-xs hidden">Ir a resultados ›</button></div>
+            </div>
+            <div class="card mt-4"><div class="card-h"><h3 class="text-sm">Estado de las intersecciones</h3><span class="text-xs text-emerald-700">4 de 4 conectadas</span></div>
+              <div id="eInter" class="grid grid-cols-4 gap-2 text-center text-xs"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =============== VISTA 3 =============== -->
+      <section id="v-resultados" class="vista hidden">
+        <div id="rVacio" class="card text-center py-16 text-slate-500">Aún no hay resultados. Inicia un ciclo en <a href="#configuracion" class="text-inst underline">Configuración</a>.</div>
+        <div id="rCont" class="hidden space-y-5">
+          <div id="rBanner" class="rounded-xl bg-emerald-100 border border-emerald-200 p-4 flex items-center gap-3">
+            <div class="h-9 w-9 rounded-full bg-emerald-600 text-white grid place-items-center">✓</div>
+            <div class="flex-1"><b id="rBanTit">Configuración lista para publicarse</b><div id="rBanTxt" class="text-sm text-emerald-900"></div></div>
+            <span id="rHuella" class="chip bg-white/70 font-mono"></span>
+          </div>
+          <div class="flex items-start justify-between gap-4">
+            <div><div class="crumb">CONFIGURACIÓN / CICLO <span id="rNum"></span> / <b>RESULTADOS DEL CICLO</b></div>
+              <h1 class="h1">Resultados del ciclo y autorización del operador</h1>
+              <p class="text-slate-600">Revisa el diagnóstico, el dictamen del Auditor y el costo asumido antes de publicar la configuración a la capa de tiempo real.</p></div>
+            <div class="flex flex-wrap gap-2 justify-end shrink-0 max-w-md">
+              <a id="btnReporte" class="btn-ghost" href="#" download>⤓ Descargar reporte (.md)</a>
+              <button id="btnRechazar" class="btn-danger-ghost">⊗ Rechazar y solicitar corrección</button>
+              <button id="btnAjustar" class="btn-ghost">✎ Ajustar propuesta</button>
+              <button id="btnAprobar" class="btn-ok">⦿ Aprobar y publicar</button>
+            </div>
+          </div>
+          <div id="rHallazgo" class="rounded-xl bg-orange-50 border border-orange-200 p-4 flex gap-3">
+            <div class="h-9 w-9 rounded-lg bg-orange-100 grid place-items-center text-orange-700">⚠</div>
+            <div class="flex-1 text-sm"><b>Hallazgo de seguridad en la configuración vigente</b> <span class="chip bg-orange-100 text-orange-800 ml-1">Requiere atención</span>
+              <div id="rHallTxt" class="mt-1 text-slate-700"></div></div>
+            <div class="text-xs text-slate-500 w-32">Es de cumplimiento, no de desempeño. No bloquea la publicación.</div>
+          </div>
+          <div id="rKpis" class="grid grid-cols-4 gap-4"></div>
+          <div class="card"><div class="card-h"><h3>Reparto del ciclo propuesto · I3 Plaza Central</h3><div id="rRepLeg" class="text-xs text-slate-500 flex gap-3"></div></div>
+            <div id="rReparto" class="flex h-9 rounded-lg overflow-hidden text-xs font-semibold text-white"></div></div>
+          <div class="grid grid-cols-12 gap-5">
+            <div class="col-span-8 card p-0 overflow-hidden">
+              <div class="card-h px-5 pt-5"><h3>Comparativa por intersección</h3><span class="chip bg-slate-100">verde principal / secundario / peatonal (s)</span></div>
+              <table class="w-full text-sm"><thead class="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
+                <tr><th class="th">Intersección</th><th class="th">Plan vigente v1.0</th><th class="th">Plan propuesto</th><th class="th text-right">Espera peatonal<br>v1.0 vs plan fijo</th><th class="th text-right">Espera vehicular<br>v1.0 vs plan fijo</th><th class="th">Vigente</th></tr></thead>
+                <tbody id="rTabla"></tbody></table>
+              <div class="px-5 py-3 text-xs text-slate-500 border-t">10 réplicas por configuración · Wilcoxon pareada (scipy) · las cifras de espera son las medidas con v1.0 en la telemetría; el efecto de la propuesta se mide al volver a simular (vista 4).</div>
+            </div>
+            <div class="col-span-4 card">
+              <div class="card-h"><h3>Verificación de reglas duras</h3><span id="rReglasChip" class="chip"></span></div>
+              <p class="text-xs text-slate-500 -mt-2 mb-3">Veredicto literal de <code>validador_reglas_duras</code>, no del modelo.</p>
+              <div id="rReglas" class="space-y-2"></div>
+            </div>
+          </div>
+          <div class="card"><div class="card-h"><h3>Justificación del Ingeniero</h3><span class="chip bg-violet-50 text-violet-700">Texto generado por LLM</span></div>
+            <dl id="rJust" class="text-sm space-y-2"></dl></div>
+          <div class="card flex items-center gap-4">
+            <div class="h-10 w-10 rounded-lg bg-inst-50 grid place-items-center">⚡</div>
+            <div class="flex-1"><b>Configuración lista para la capa de tiempo real</b><div id="rPubTxt" class="text-sm text-slate-600">Los cuatro controladores tomarán la configuración en su siguiente ciclo de decisión.</div></div>
+            <button id="btnAprobar2" class="btn-dark">⇪ Publicar</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- =============== VISTA 4 =============== -->
+      <section id="v-mapa" class="vista hidden">
+        <div class="flex items-start justify-between">
+          <div><div class="crumb">CONSOLA DE SUPERVISIÓN › <b>UNIVERSIDAD ANÁHUAC PUEBLA · TOPOLOGÍA OSM Y AUDITORÍA</b></div>
+            <h1 class="h1">Mapa del circuito y bitácora de vetos</h1>
+            <p class="text-slate-600">Red real del campus importada de OpenStreetMap y simulada en SUMO. Estado por intersección, acciones del operador y traza de los vetos.</p></div>
+          <div class="text-xs text-right"><span id="simChip" class="chip bg-slate-100">Simulador arrancando…</span>
+            <div class="mt-1 text-slate-500">Reloj de simulación: <b id="simReloj" class="font-mono">00:00</b></div></div>
+        </div>
+        <div class="grid grid-cols-12 gap-5 mt-4">
+          <div class="col-span-8 card p-0 overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-3 border-b">
+              <div><b>Circuito vial del campus</b> <span class="chip bg-inst-50 text-inst">data/mapa.osm</span>
+                <div class="text-xs text-slate-500">SUMO + TraCI · paso de 0.25 s · clic en un acceso agrega autos (Shift = ambulancia), clic en Ix selecciona el nodo</div></div>
+              <div class="flex gap-1 text-xs">
+                <button id="sPlay" class="btn-dark text-xs">▶ Iniciar</button>
+                <button data-plan="fijo" class="plan">Plan fijo</button>
+                <button data-plan="supervision" class="plan">Supervisión</button></div>
+            </div>
+            <div class="relative"><canvas id="mapa" class="w-full h-[460px] block bg-[#0f1a2a]"></canvas>
+              <div class="absolute bottom-3 left-3 bg-white/90 rounded-md px-3 py-1.5 text-[11px] flex gap-3">
+                <span>■ <i class="not-italic text-slate-500">circulando</i></span><span class="text-amber-600">■ esperando</span><span class="text-red-600">■ &gt;30 s</span><span class="text-sky-600">■ ambulancia</span></div>
+              <div id="simAviso" class="absolute inset-0 grid place-items-center text-slate-300 text-sm">Construyendo la red del campus…</div>
+            </div>
+            <div class="grid grid-cols-6 border-t text-center text-xs" id="simKpis"></div>
+            <div class="flex flex-wrap items-center gap-3 px-4 py-3 border-t text-xs">
+              <label>Velocidad <input id="sVel" type="range" min="1" max="10" value="1" class="align-middle"> <b id="sVelT">1×</b></label>
+              <label>Demanda <input id="sDem" type="range" min="0" max="80" value="20" class="align-middle"> <b id="sDemT">20</b> veh/min</label>
+              <button id="sRafaga" class="btn-ghost text-xs">⚑ Cambio de clase (+40)</button>
+              <button id="sAmb" class="btn-ghost text-xs">🚑 Ambulancia</button>
+              <label><input id="sPre" type="checkbox" checked> Preempción de emergencia</label>
+              <button id="sReset" class="btn-ghost text-xs">↺ Reiniciar</button>
+            </div>
+          </div>
+          <div class="col-span-4 space-y-4">
+            <div class="card">
+              <div class="flex justify-between text-[11px] tracking-widest text-slate-500"><span>DIAGNÓSTICO DEL NODO</span><span id="nChip" class="chip"></span></div>
+              <div class="flex gap-1 mt-2" id="nSel"></div>
+              <h3 id="nTit" class="text-lg font-bold mt-2">—</h3><div id="nSub" class="text-xs text-slate-500"></div>
+              <div class="grid grid-cols-2 gap-2 mt-3" id="nDatos"></div>
+              <div id="nRegla" class="mt-3 rounded-lg bg-slate-50 border p-3 text-xs"></div>
+              <div class="mt-3 text-[11px] tracking-widest text-slate-500">ACCIONES DEL OPERADOR</div>
+              <button id="aExt" class="btn-dark w-full mt-2">⟳ Extender fase en curso (+5 s)</button>
+              <div class="grid grid-cols-2 gap-2 mt-2"><button id="aRojo" class="btn-danger">✋ Forzar todo-rojo (15 s)</button>
+                <button id="aFijo" class="btn-ghost">↺ Volver al plan fijo</button></div>
+              <div id="simPlan" class="mt-3 text-xs text-slate-600"></div>
+            </div>
+            <div class="card"><h3 class="text-sm font-semibold mb-2">Eventos del simulador</h3>
+              <pre id="simLog" class="text-[11px] font-mono text-slate-600 h-40 overflow-y-auto whitespace-pre-wrap"></pre></div>
+          </div>
+        </div>
+        <div class="card mt-5">
+          <div class="card-h"><div><h3>Bitácora de vetos del Auditor <span id="bChip" class="chip bg-inst-50 text-inst ml-1"></span></h3>
+            <p>Cada propuesta pasa por <code>validador_reglas_duras</code> antes de poder publicarse. Historial persistido en SQLite.</p></div>
+            <div class="flex gap-2"><input id="bBuscar" class="input w-64" placeholder="Buscar por nodo, regla o agente…">
+              <a href="/api/bitacora.csv" class="btn-ghost shrink-0">⤓ Exportar CSV</a></div></div>
+          <div class="max-h-96 overflow-y-auto"><table class="w-full text-sm"><thead class="text-[11px] uppercase text-slate-500 bg-slate-50 sticky top-0">
+            <tr><th class="th">Hora</th><th class="th">Ciclo</th><th class="th">Etapa</th><th class="th">Intersección</th><th class="th">Agente</th><th class="th">Regla incumplida</th><th class="th">Parámetro detectado</th><th class="th">Resultado</th></tr></thead>
+            <tbody id="bTabla"></tbody></table></div>
+        </div>
+        <div class="card mt-5"><div class="card-h"><h3>Decisiones humanas</h3><span class="text-xs text-slate-500">Quién autorizó, ajustó o rechazó qué versión</span></div>
+          <table class="w-full text-sm"><thead class="text-[11px] uppercase text-slate-500 bg-slate-50"><tr><th class="th">Fecha</th><th class="th">Ciclo</th><th class="th">Acción</th><th class="th">Operador</th><th class="th">Versión</th><th class="th">Huella</th><th class="th">Motivo</th></tr></thead>
+            <tbody id="dTabla"></tbody></table></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- ============ modales ============ -->
+<div id="modal" class="fixed inset-0 z-50 hidden bg-slate-900/50 grid place-items-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between px-6 py-4 border-b"><h3 id="mTit" class="font-bold text-lg"></h3><button id="mCerrar" class="text-slate-400 text-xl">×</button></div>
+    <div id="mCuerpo" class="p-6"></div>
+    <div id="mPie" class="px-6 py-4 border-t bg-slate-50 rounded-b-2xl flex justify-end gap-2"></div>
+  </div>
+</div>
+<div id="toast" class="fixed bottom-5 right-5 z-50 hidden rounded-lg px-4 py-3 text-sm shadow-lg"></div>
+
+<script src="/web/app.js"></script>
+</body>
+</html>
