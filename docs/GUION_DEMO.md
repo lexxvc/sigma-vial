@@ -1,7 +1,7 @@
 # Guion de la demostración en vivo · 5 minutos
 
 **Antes de entrar al salón**
-- Servidor corriendo (`python -m uvicorn api.main:app --port 8000`), consola abierta en `http://localhost:8000`.
+- Abrir https://lexxco-sigma-vial.hf.space 10 minutos antes (si el Space estaba dormido tarda 1–2 min en despertar).
 - Nombre del operador escrito en la barra superior.
 - Una corrida previa de prueba con Gemini en los últimos 30 minutos (confirma clave y cuota).
 - Vista 4 abierta una vez para que la red de SUMO ya esté construida.
